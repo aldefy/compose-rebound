@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>io.aldefy.rebound.ide</id>
+    <name>Rebound</name>
+    <vendor url="https://github.com/nickaldenfy/compose-rebound">aldefy</vendor>
+
+    <description><![CDATA[
+    Live recomposition budget monitor for Jetpack Compose.
+    Parses Rebound logcat output and displays composable recomposition rates, budgets, and violations in a tool window.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Rebound"
+                    anchor="bottom"
+                    factoryClass="io.aldefy.rebound.ide.ReboundToolWindowFactory"
+                    icon="AllIcons.Debugger.Watch"/>
+    </extensions>
+</idea-plugin>
