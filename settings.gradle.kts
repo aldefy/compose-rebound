@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("rebound-gradle")
     repositories {
         google {
             content {
@@ -23,5 +24,5 @@ dependencyResolutionManagement {
 rootProject.name = "compose-rebound"
 include(":rebound-runtime")
 include(":rebound-compiler")
-include(":rebound-gradle")
 include(":sample")
+include(":rebound-ide")
