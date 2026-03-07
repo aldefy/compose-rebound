@@ -152,7 +152,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.nickalert.rebound.runtime"
+    namespace = "io.aldefy.rebound.runtime"
     compileSdk = 34
     defaultConfig { minSdk = 23 }
     compileOptions {
@@ -165,7 +165,7 @@ android {
 **Step 2: Create `BudgetClass.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 enum class BudgetClass(val baseBudgetPerSecond: Int) {
     SCREEN(3),
@@ -182,7 +182,7 @@ enum class BudgetClass(val baseBudgetPerSecond: Int) {
 
 ```kotlin
 // commonMain
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 expect object ReboundLogger {
     fun log(tag: String, message: String)
@@ -192,7 +192,7 @@ expect object ReboundLogger {
 
 ```kotlin
 // androidMain — AndroidReboundLogger.kt
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 import android.util.Log
 
@@ -204,7 +204,7 @@ actual object ReboundLogger {
 
 ```kotlin
 // jvmMain — JvmReboundLogger.kt
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 actual object ReboundLogger {
     actual fun log(tag: String, message: String) { println("[$tag] $message") }
@@ -215,7 +215,7 @@ actual object ReboundLogger {
 **Step 4: Create `ComposableMetrics.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 class ComposableMetrics(val budgetClass: BudgetClass) {
     private var compositionCount: Long = 0
@@ -243,7 +243,7 @@ class ComposableMetrics(val budgetClass: BudgetClass) {
 **Step 5: Create `ReboundTracker.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 object ReboundTracker {
     private val metrics = mutableMapOf<String, ComposableMetrics>()
@@ -286,18 +286,18 @@ Add `currentTimeNanos` expect/actuals:
 // Already declared above as expect
 
 // androidMain — create CurrentTime.android.kt
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 internal actual fun currentTimeNanos(): Long = System.nanoTime()
 
 // jvmMain — create CurrentTime.jvm.kt
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 internal actual fun currentTimeNanos(): Long = System.nanoTime()
 ```
 
 **Step 6: Create `ReboundTrackerTest.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound
+package io.aldefy.rebound
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -388,7 +388,7 @@ java {
 **Step 2: Create `ReboundCommandLineProcessor.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.compiler
+package io.aldefy.rebound.compiler
 
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
@@ -401,7 +401,7 @@ val KEY_ENABLED = CompilerConfigurationKey<Boolean>("enabled")
 
 @OptIn(ExperimentalCompilerApi::class)
 class ReboundCommandLineProcessor : CommandLineProcessor {
-    override val pluginId: String = "io.github.nickalert.rebound"
+    override val pluginId: String = "io.aldefy.rebound"
 
     override val pluginOptions: Collection<AbstractCliOption> = listOf(
         CliOption(
@@ -427,7 +427,7 @@ class ReboundCommandLineProcessor : CommandLineProcessor {
 **Step 3: Create `ReboundCompilerPluginRegistrar.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.compiler
+package io.aldefy.rebound.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -450,7 +450,7 @@ class ReboundCompilerPluginRegistrar : CompilerPluginRegistrar() {
 **Step 4: Create `ReboundIrGenerationExtension.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.compiler
+package io.aldefy.rebound.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -468,7 +468,7 @@ class ReboundIrGenerationExtension : IrGenerationExtension {
 This is the core. It visits every function, checks for @Composable annotation, and injects `ReboundTracker.onComposition(key, budgetClassOrdinal, changedMask)` at the top of the function body.
 
 ```kotlin
-package io.github.nickalert.rebound.compiler
+package io.aldefy.rebound.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -497,7 +497,7 @@ class ReboundIrTransformer(
     // Resolve ReboundTracker.onComposition at transform time
     private val onCompositionFn: IrSimpleFunctionSymbol? by lazy {
         val classId = ClassId(
-            FqName("io.github.nickalert.rebound"),
+            FqName("io.aldefy.rebound"),
             Name.identifier("ReboundTracker")
         )
         val trackerClass = pluginContext.referenceClass(classId)
@@ -540,7 +540,7 @@ class ReboundIrTransformer(
 
             // Set the dispatch receiver to the ReboundTracker object instance
             val classId = ClassId(
-                FqName("io.github.nickalert.rebound"),
+                FqName("io.aldefy.rebound"),
                 Name.identifier("ReboundTracker")
             )
             val trackerClass = pluginContext.referenceClass(classId)
@@ -561,12 +561,12 @@ class ReboundIrTransformer(
 
 ```
 // META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-io.github.nickalert.rebound.compiler.ReboundCompilerPluginRegistrar
+io.aldefy.rebound.compiler.ReboundCompilerPluginRegistrar
 ```
 
 ```
 // META-INF/services/org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-io.github.nickalert.rebound.compiler.ReboundCommandLineProcessor
+io.aldefy.rebound.compiler.ReboundCommandLineProcessor
 ```
 
 **Step 7: Verify compilation**
@@ -591,7 +591,7 @@ Wires the compiler plugin into consuming projects via `KotlinCompilerPluginSuppo
 - Create: `rebound-gradle/build.gradle.kts`
 - Create: `rebound-gradle/src/main/kotlin/io/github/nickalert/rebound/gradle/ReboundGradlePlugin.kt`
 - Create: `rebound-gradle/src/main/kotlin/io/github/nickalert/rebound/gradle/ReboundExtension.kt`
-- Create: `rebound-gradle/src/main/resources/META-INF/gradle-plugins/io.github.nickalert.rebound.properties`
+- Create: `rebound-gradle/src/main/resources/META-INF/gradle-plugins/io.aldefy.rebound.properties`
 
 **Step 1: Create `rebound-gradle/build.gradle.kts`**
 
@@ -613,8 +613,8 @@ java {
 gradlePlugin {
     plugins {
         create("rebound") {
-            id = "io.github.nickalert.rebound"
-            implementationClass = "io.github.nickalert.rebound.gradle.ReboundGradlePlugin"
+            id = "io.aldefy.rebound"
+            implementationClass = "io.aldefy.rebound.gradle.ReboundGradlePlugin"
         }
     }
 }
@@ -623,7 +623,7 @@ gradlePlugin {
 **Step 2: Create `ReboundExtension.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.gradle
+package io.aldefy.rebound.gradle
 
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -637,7 +637,7 @@ abstract class ReboundExtension @Inject constructor(objects: ObjectFactory) {
 **Step 3: Create `ReboundGradlePlugin.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.gradle
+package io.aldefy.rebound.gradle
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -662,10 +662,10 @@ class ReboundGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
-    override fun getCompilerPluginId(): String = "io.github.nickalert.rebound"
+    override fun getCompilerPluginId(): String = "io.aldefy.rebound"
 
     override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
-        groupId = "io.github.nickalert.rebound",
+        groupId = "io.aldefy.rebound",
         artifactId = "rebound-compiler",
         version = "0.1.0-SNAPSHOT"
     )
@@ -686,8 +686,8 @@ class ReboundGradlePlugin : KotlinCompilerPluginSupportPlugin {
 **Step 4: Create plugin properties file**
 
 ```
-// META-INF/gradle-plugins/io.github.nickalert.rebound.properties
-implementation-class=io.github.nickalert.rebound.gradle.ReboundGradlePlugin
+// META-INF/gradle-plugins/io.aldefy.rebound.properties
+implementation-class=io.aldefy.rebound.gradle.ReboundGradlePlugin
 ```
 
 **Step 5: Verify compilation**
@@ -722,15 +722,15 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
-    id("io.github.nickalert.rebound")
+    id("io.aldefy.rebound")
 }
 
 android {
-    namespace = "io.github.nickalert.rebound.sample"
+    namespace = "io.aldefy.rebound.sample"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "io.github.nickalert.rebound.sample"
+        applicationId = "io.aldefy.rebound.sample"
         minSdk = 23
         targetSdk = 34
         versionCode = 1
@@ -782,7 +782,7 @@ rebound {
 This has intentional bugs for Rebound to detect:
 
 ```kotlin
-package io.github.nickalert.rebound.sample
+package io.aldefy.rebound.sample
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -832,13 +832,13 @@ fun StableList() {
 **Step 4: Create `MainActivity.kt`**
 
 ```kotlin
-package io.github.nickalert.rebound.sample
+package io.aldefy.rebound.sample
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
-import io.github.nickalert.rebound.ReboundTracker
+import io.aldefy.rebound.ReboundTracker
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -936,7 +936,7 @@ And make `getPluginArtifact` return a dummy (won't be used when the classpath is
 
 ```kotlin
 override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
-    groupId = "io.github.nickalert.rebound",
+    groupId = "io.aldefy.rebound",
     artifactId = "rebound-compiler",
     version = "0.1.0-SNAPSHOT" // Not resolved in local dev — classpath set manually
 )
@@ -991,10 +991,10 @@ Run: `adb logcat -s Rebound:*`
 
 Expected output pattern:
 ```
-D/Rebound: io.github.nickalert.rebound.sample.OverRecomposingScreen composed (#1, rate=1/s, budget=10/s)
-D/Rebound: io.github.nickalert.rebound.sample.StableList composed (#1, rate=1/s, budget=10/s)
+D/Rebound: io.aldefy.rebound.sample.OverRecomposingScreen composed (#1, rate=1/s, budget=10/s)
+D/Rebound: io.aldefy.rebound.sample.StableList composed (#1, rate=1/s, budget=10/s)
 ...
-W/Rebound: BUDGET VIOLATION: io.github.nickalert.rebound.sample.OverRecomposingScreen rate=60/s exceeds budget=10/s
+W/Rebound: BUDGET VIOLATION: io.aldefy.rebound.sample.OverRecomposingScreen rate=60/s exceeds budget=10/s
 ```
 
 **Step 3: If logcat shows tracking — IR plugin works! MVP COMPLETE.**
@@ -1040,4 +1040,4 @@ Add `reboundSnapshot` and `reboundCheck` tasks to the Gradle plugin — the CI b
 1. **Thread safety**: `mutableMapOf` is not thread-safe. Replace with `ConcurrentHashMap` on JVM, platform-appropriate concurrent map on Native.
 2. **Plugin ordering**: Need to verify the Rebound plugin runs after the Compose compiler. May need to set explicit ordering in the Gradle plugin registration.
 3. **Budget classification**: All composables are currently `UNKNOWN`. IR analysis for SCREEN/LEAF/LIST_ITEM classification is Task 4 in the design.
-4. **Package name**: `io.github.nickalert` is a placeholder — decide on final package before publishing.
+4. **Package name**: `io.aldefy` is the final package namespace.

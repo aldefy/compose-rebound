@@ -1,0 +1,95 @@
+{
+  "composables": {
+    "io.aldefy.rebound.sample.ComposableSingletons$MainActivityKt.lambda-1.<anonymous>": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 1,
+      "peakRate": 1,
+      "currentRate": 0,
+      "totalEnters": 1,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 0,
+      "paramDrivenCount": 0,
+      "lastInvalidation": ""
+    },
+    "io.aldefy.rebound.sample.OverRecomposingScreen.<anonymous>": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 1,
+      "peakRate": 1,
+      "currentRate": 0,
+      "totalEnters": 205978,
+      "skipCount": 205977,
+      "skipRate": 0.9999952,
+      "forcedCount": 0,
+      "paramDrivenCount": 1,
+      "lastInvalidation": ""
+    },
+    "io.aldefy.rebound.sample.ComposableSingletons$MainActivityKt.lambda-2.<anonymous>": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 1,
+      "peakRate": 1,
+      "currentRate": 0,
+      "totalEnters": 1,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 0,
+      "paramDrivenCount": 0,
+      "lastInvalidation": ""
+    },
+    "io.aldefy.rebound.sample.StableList.<anonymous>.<anonymous>.<anonymous>.<anonymous>": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 15,
+      "peakRate": 15,
+      "currentRate": 15,
+      "totalEnters": 15,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 0,
+      "paramDrivenCount": 15,
+      "lastInvalidation": "MutableIntState(value=1002)@17188410, MutableIntState(value=1928)@65913579"
+    },
+    "io.aldefy.rebound.sample.StableList": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 1,
+      "peakRate": 1,
+      "currentRate": 0,
+      "totalEnters": 205978,
+      "skipCount": 205977,
+      "skipRate": 0.9999952,
+      "forcedCount": 0,
+      "paramDrivenCount": 0,
+      "lastInvalidation": ""
+    },
+    "io.aldefy.rebound.sample.StableList.<anonymous>.<anonymous>.<anonymous>": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 15,
+      "peakRate": 15,
+      "currentRate": 15,
+      "totalEnters": 15,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 0,
+      "paramDrivenCount": 15,
+      "lastInvalidation": "MutableIntState(value=1002)@17188410, MutableIntState(value=1928)@65913579"
+    },
+    "io.aldefy.rebound.sample.OverRecomposingScreen": {
+      "budgetClass": "SCREEN",
+      "budgetPerSecond": 3,
+      "totalCompositions": 205978,
+      "peakRate": 61,
+      "currentRate": 56,
+      "totalEnters": 205978,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 205977,
+      "paramDrivenCount": 0,
+      "lastInvalidation": "MutableIntState(value=206529)@33001338"
+    }
+  }
+}

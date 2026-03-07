@@ -1,0 +1,9 @@
+{
+  "composableCount": 1,
+  "budgetClassDistribution": {"CONTAINER": 1},
+  "violationCount": 0,
+  "violationsByClass": {},
+  "averageRateByClass": {"CONTAINER": 2.0},
+  "peakRateByClass": {"CONTAINER": 2.0},
+  "skipRateByClass": {"CONTAINER": 0.0}
+}

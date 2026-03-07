@@ -1,0 +1,9 @@
+{
+  "composableCount": 17,
+  "budgetClassDistribution": {"CONTAINER": 15, "ANIMATED": 2},
+  "violationCount": 0,
+  "violationsByClass": {},
+  "averageRateByClass": {"CONTAINER": 3.3333333, "ANIMATED": 0.0},
+  "peakRateByClass": {"CONTAINER": 10.0, "ANIMATED": 1.0},
+  "skipRateByClass": {"CONTAINER": 0.0, "ANIMATED": 0.0}
+}

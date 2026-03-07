@@ -1,0 +1,17 @@
+{
+  "composables": {
+    "com.example.hellodistort.App": {
+      "budgetClass": "CONTAINER",
+      "budgetPerSecond": 10,
+      "totalCompositions": 2,
+      "peakRate": 2,
+      "currentRate": 2,
+      "totalEnters": 2,
+      "skipCount": 0,
+      "skipRate": 0.0,
+      "forcedCount": 0,
+      "paramDrivenCount": 0,
+      "lastInvalidation": "MutableState(value=Touch)@117190945, MutableFloatState(value=1080.0)@266076141, MutableFloatState(value=2424.0)@116678178"
+    }
+  }
+}
