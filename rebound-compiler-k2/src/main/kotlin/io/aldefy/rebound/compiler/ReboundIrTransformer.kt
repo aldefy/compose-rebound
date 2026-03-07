@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrBranchImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrElseBranchImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrStringConcatenationImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrTryImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrWhenImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
@@ -65,6 +66,15 @@ class ReboundIrTransformer(
         trackerClass?.owner?.declarations
             ?.filterIsInstance<IrSimpleFunction>()
             ?.firstOrNull { it.name.asString() == "onEnter" }
+            ?.symbol
+    }
+
+    // Resolve ReboundTracker.onExit at transform time
+    private val onExitFn: IrSimpleFunctionSymbol? by lazy {
+        val trackerClass = pluginContext.referenceClass(trackerClassId)
+        trackerClass?.owner?.declarations
+            ?.filterIsInstance<IrSimpleFunction>()
+            ?.firstOrNull { it.name.asString() == "onExit" }
             ?.symbol
     }
 
@@ -186,29 +196,13 @@ class ReboundIrTransformer(
             }
         }
 
-        // --- Inject onEnter at position 0: fires for EVERY call (including skipped) ---
-        val enterFn = onEnterFn
-        if (enterFn != null) {
-            val enterCall = builder.irCall(enterFn).apply {
-                val enterParams = enterFn.owner.parameters
-                setArgumentByIndex(enterParams, 0, builder.irString(fqName))
-                if (trackerClass != null) {
-                    val dispatchIdx = enterFn.owner.parameters.indexOfFirst { it.name.asString() == "<this>" }
-                    if (dispatchIdx >= 0) {
-                        arguments[dispatchIdx] = builder.irGetObject(trackerClass)
-                    }
-                }
-            }
-            body.statements.add(0, enterCall)
-        }
-
-        // --- Inject onComposition guarded by if (!$composer.skipping) ---
+        // --- Build onComposition guard (if !$composer.skipping) ---
         val composerParam = function.parameters.firstOrNull {
             it.name.asString() == "\$composer"
         }
         val skippingGetterFn = skippingGetter
 
-        if (composerParam != null && skippingGetterFn != null) {
+        val onCompositionStatement = if (composerParam != null && skippingGetterFn != null) {
             val getSkipping = builder.irCall(skippingGetterFn).apply {
                 val dispatchIdx = skippingGetterFn.owner.parameters.indexOfFirst { it.name.asString() == "<this>" }
                 if (dispatchIdx >= 0) {
@@ -226,7 +220,7 @@ class ReboundIrTransformer(
                 listOf(trackCall)
             )
             val constTrue = IrConstImpl.boolean(UNDEFINED_OFFSET, UNDEFINED_OFFSET, pluginContext.irBuiltIns.booleanType, true)
-            val ifNotSkipping = IrWhenImpl(
+            IrWhenImpl(
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 pluginContext.irBuiltIns.unitType, null,
                 listOf(
@@ -234,11 +228,87 @@ class ReboundIrTransformer(
                     IrElseBranchImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, constTrue, compositionBlock)
                 )
             )
-            val insertPos = if (enterFn != null) 1 else 0
-            body.statements.add(insertPos, ifNotSkipping)
         } else {
-            val insertPos = if (enterFn != null) 1 else 0
-            body.statements.add(insertPos, trackCall)
+            trackCall
+        }
+
+        // --- Build onEnter call ---
+        val enterFn = onEnterFn
+        val exitFn = onExitFn
+
+        val enterCall = if (enterFn != null) {
+            builder.irCall(enterFn).apply {
+                val enterParams = enterFn.owner.parameters
+                setArgumentByIndex(enterParams, 0, builder.irString(fqName))
+                if (trackerClass != null) {
+                    val dispatchIdx = enterFn.owner.parameters.indexOfFirst { it.name.asString() == "<this>" }
+                    if (dispatchIdx >= 0) {
+                        arguments[dispatchIdx] = builder.irGetObject(trackerClass)
+                    }
+                }
+            }
+        } else null
+
+        // --- Build onExit call for finally block ---
+        val exitCall = if (exitFn != null && trackerClass != null) {
+            builder.irCall(exitFn).apply {
+                val exitParams = exitFn.owner.parameters
+                setArgumentByIndex(exitParams, 0, builder.irString(fqName))
+                val dispatchIdx = exitFn.owner.parameters.indexOfFirst { it.name.asString() == "<this>" }
+                if (dispatchIdx >= 0) {
+                    arguments[dispatchIdx] = builder.irGetObject(trackerClass)
+                }
+            }
+        } else null
+
+        // --- Wrap body in try-finally for onExit ---
+        // Structure:
+        //   onEnter(key)
+        //   try {
+        //       if (!$composer.skipping) { onComposition(key, ...) }
+        //       ... original body ...
+        //   } finally {
+        //       onExit(key)
+        //   }
+        if (exitCall != null) {
+            val originalStatements = body.statements.toList()
+            body.statements.clear()
+
+            if (enterCall != null) {
+                body.statements.add(enterCall)
+            }
+
+            val tryBodyStatements = mutableListOf<org.jetbrains.kotlin.ir.IrStatement>()
+            tryBodyStatements.add(onCompositionStatement)
+            tryBodyStatements.addAll(originalStatements)
+
+            val tryBody = IrBlockImpl(
+                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                pluginContext.irBuiltIns.unitType, null,
+                tryBodyStatements
+            )
+
+            val finallyBlock = IrBlockImpl(
+                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                pluginContext.irBuiltIns.unitType, null,
+                listOf(exitCall)
+            )
+
+            val tryFinally = IrTryImpl(
+                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                pluginContext.irBuiltIns.unitType,
+                tryBody,
+                catches = emptyList(),
+                finallyExpression = finallyBlock
+            )
+
+            body.statements.add(tryFinally)
+        } else {
+            if (enterCall != null) {
+                body.statements.add(0, enterCall)
+            }
+            val insertPos = if (enterCall != null) 1 else 0
+            body.statements.add(insertPos, onCompositionStatement)
         }
 
         return function

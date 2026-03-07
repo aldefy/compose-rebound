@@ -36,6 +36,8 @@ object SnapshotParser {
             val paramDrivenCount = extractLong(body, "paramDrivenCount")
             val peak = extractInt(body, "peakRate")
             val lastInvalidation = extractString(body, "lastInvalidation")
+            val parent = extractString(body, "parent")
+            val depth = extractInt(body, "depth")
 
             val skipPct = (skipRate * 1000).toInt() / 10.0
 
@@ -50,7 +52,9 @@ object SnapshotParser {
                 changedParams = if (paramDrivenCount > 0) "param-driven: $paramDrivenCount" else "",
                 skipPercent = skipPct,
                 peakRate = peak,
-                invalidationReason = lastInvalidation
+                invalidationReason = lastInvalidation,
+                parentFqn = parent,
+                depth = depth
             )
         }.toList()
     }

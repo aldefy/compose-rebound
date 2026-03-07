@@ -18,7 +18,9 @@ data class ReboundSnapshot(
         val skipRate: Float = 0f,
         val forcedCount: Long = 0,
         val paramDrivenCount: Long = 0,
-        val lastInvalidation: String = ""
+        val lastInvalidation: String = "",
+        val parent: String = "",
+        val depth: Int = 0
     )
 
     /** Export as JSON string (no external dependencies) */
@@ -39,7 +41,9 @@ data class ReboundSnapshot(
             sb.append("      \"skipRate\": ${snap.skipRate},\n")
             sb.append("      \"forcedCount\": ${snap.forcedCount},\n")
             sb.append("      \"paramDrivenCount\": ${snap.paramDrivenCount},\n")
-            sb.append("      \"lastInvalidation\": \"${escapeJson(snap.lastInvalidation)}\"\n")
+            sb.append("      \"lastInvalidation\": \"${escapeJson(snap.lastInvalidation)}\",\n")
+            sb.append("      \"parent\": \"${escapeJson(snap.parent)}\",\n")
+            sb.append("      \"depth\": ${snap.depth}\n")
             sb.append("    }")
             if (i < entries.size - 1) sb.append(",")
             sb.append("\n")
@@ -84,7 +88,9 @@ data class ReboundSnapshot(
                     skipRate = extractFloat("skipRate"),
                     forcedCount = extractLong("forcedCount"),
                     paramDrivenCount = extractLong("paramDrivenCount"),
-                    lastInvalidation = extractString("lastInvalidation")
+                    lastInvalidation = extractString("lastInvalidation"),
+                    parent = extractString("parent"),
+                    depth = extractInt("depth")
                 )
             }
             return ReboundSnapshot(composables)

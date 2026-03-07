@@ -14,6 +14,16 @@ object ReboundTracker {
 
     private var initialized = false
 
+    // --- Composition call-tree tracking ---
+    // Compose runs on the main thread, so a simple stack suffices (no ThreadLocal needed in KMP)
+    private val compositionStack = ArrayDeque<String>()
+
+    /** Parent map: childFQN → parentFQN */
+    private val parentMap = concurrentMapOf<String, String>()
+
+    /** Depth map: FQN → call depth (0 = root) */
+    private val depthMap = concurrentMapOf<String, Int>()
+
     // --- Deep "Why" tracking ---
 
     /** Scope name set by onComposition, read by platform state tracker callbacks. */
@@ -53,6 +63,22 @@ object ReboundTracker {
         if (!enabled) return
         val m = metrics.getOrPut(key) { ComposableMetrics(BudgetClass.UNKNOWN) }
         m.recordEnter()
+
+        // Track parent-child in composition call tree
+        val parent = compositionStack.lastOrNull() ?: ""
+        if (parent.isNotEmpty()) {
+            parentMap[key] = parent
+        }
+        depthMap[key] = compositionStack.size
+        compositionStack.addLast(key)
+    }
+
+    /** Called in finally block when a @Composable exits — pops the call stack. */
+    fun onExit(key: String) {
+        if (!enabled) return
+        if (compositionStack.isNotEmpty() && compositionStack.last() == key) {
+            compositionStack.removeLast()
+        }
     }
 
     /** Called by the compiler plugin inside the non-skip path of every @Composable function. */
@@ -151,6 +177,9 @@ object ReboundTracker {
         lastInvalidationReason.clear()
         invalidationEvents.clear()
         eventCounter = 0
+        compositionStack.clear()
+        parentMap.clear()
+        depthMap.clear()
         InteractionDetector.reset()
     }
 
@@ -172,7 +201,9 @@ object ReboundTracker {
                     skipRate = m.skipRate,
                     forcedCount = m.forcedRecompositionCount,
                     paramDrivenCount = m.paramDrivenRecompositionCount,
-                    lastInvalidation = getLastInvalidationReason(key)
+                    lastInvalidation = getLastInvalidationReason(key),
+                    parent = parentMap[key] ?: "",
+                    depth = depthMap[key] ?: 0
                 )
             }
         )

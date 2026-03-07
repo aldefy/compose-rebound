@@ -11,7 +11,9 @@ data class ComposableEntry(
     var changedParams: String = "",
     var skipPercent: Double = -1.0,
     var peakRate: Int = 0,
-    var invalidationReason: String = ""
+    var invalidationReason: String = "",
+    var parentFqn: String = "",
+    var depth: Int = 0
 ) {
     /** Simple function name, e.g. "StickerCanvas" */
     val simpleName: String
