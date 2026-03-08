@@ -18,6 +18,7 @@ dependencies {
     intellijPlatform {
         androidStudio("2024.2.1.3")
         bundledPlugin("org.jetbrains.kotlin")
+        bundledPlugin("Git4Idea")
     }
 }
 

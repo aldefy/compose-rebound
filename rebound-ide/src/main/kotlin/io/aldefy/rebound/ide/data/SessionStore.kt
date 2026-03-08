@@ -15,11 +15,13 @@ class SessionStore(private val settings: ReboundSettings) {
 
     val rateHistory: RateHistoryBuffer = RateHistoryBuffer(settings.state.historyRetentionSeconds)
 
-    private val events: MutableList<LogEvent> = mutableListOf()
-    private val snapshots: MutableList<TimestampedSnapshot> = mutableListOf()
+    private val events: ArrayDeque<LogEvent> = ArrayDeque()
+    private val snapshots: ArrayDeque<TimestampedSnapshot> = ArrayDeque()
     private var lastSnapshotMs: Long = 0L
 
     private val listeners = CopyOnWriteArrayList<SessionListener>()
+
+    var vcsContext: VcsSessionContext? = null
 
     var isConnected: Boolean = false
         private set
@@ -33,8 +35,14 @@ class SessionStore(private val settings: ReboundSettings) {
     }
 
     fun onSnapshot(entries: List<ComposableEntry>) {
+        if (entries.isEmpty()) return
+
         // 1. Diff and emit events
-        diffAndEmitEvents(entries)
+        try {
+            diffAndEmitEvents(entries)
+        } catch (e: Exception) {
+            // Don't let a bad diff crash the whole snapshot pipeline
+        }
 
         // 2. Record rate history for every entry
         for (entry in entries) {
@@ -48,6 +56,12 @@ class SessionStore(private val settings: ReboundSettings) {
             val entryMap = entries.associateBy { it.name }
             snapshots.add(TimestampedSnapshot(now, entryMap))
             lastSnapshotMs = now
+
+            // Evict oldest snapshots beyond retention window
+            val maxSnapshots = settings.state.historyRetentionSeconds / settings.state.snapshotIntervalSeconds
+            while (snapshots.size > maxSnapshots) {
+                snapshots.removeFirst()
+            }
         }
 
         // 4. Update previous and current entries
@@ -77,11 +91,25 @@ class SessionStore(private val settings: ReboundSettings) {
         events.clear()
         snapshots.clear()
         lastSnapshotMs = 0L
+        vcsContext = null
     }
 
     fun getEvents(): List<LogEvent> = events.toList()
 
     fun getSnapshots(): List<TimestampedSnapshot> = snapshots.toList()
+
+    fun toSessionData(): SessionData {
+        val violations = currentEntries.values.count { it.rate > it.budget && it.budget > 0 }
+        return SessionData(
+            snapshots = getSnapshots(),
+            events = getEvents(),
+            composableCount = currentEntries.size,
+            violationCount = violations,
+            durationMs = if (snapshots.isNotEmpty()) System.currentTimeMillis() - snapshots.first().timestampMs else 0L,
+            branch = vcsContext?.branch,
+            commitHash = vcsContext?.commitHash
+        )
+    }
 
     private fun diffAndEmitEvents(entries: List<ComposableEntry>) {
         for (entry in entries) {
@@ -132,7 +160,7 @@ class SessionStore(private val settings: ReboundSettings) {
         // Evict oldest if over max
         val max = settings.state.maxEventLogLines
         while (events.size > max) {
-            events.removeAt(0)
+            events.removeFirst()
         }
 
         for (listener in listeners) {

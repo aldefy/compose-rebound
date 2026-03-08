@@ -6,9 +6,13 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.JBColor
 import io.aldefy.rebound.ide.data.ReboundSettings
 import io.aldefy.rebound.ide.data.SessionStore
+import io.aldefy.rebound.ide.data.VcsSessionContext
 import io.aldefy.rebound.ide.editor.ReboundSessionStoreHolder
+import io.aldefy.rebound.ide.data.SessionPersistence
 import io.aldefy.rebound.ide.tabs.HotSpotsPanel
+import io.aldefy.rebound.ide.tabs.HistoryPanel
 import io.aldefy.rebound.ide.tabs.MonitorTab
+import io.aldefy.rebound.ide.tabs.StabilityPanel
 import io.aldefy.rebound.ide.tabs.TimelinePanel
 import java.awt.BorderLayout
 import javax.swing.*
@@ -27,6 +31,8 @@ class ReboundPanel(private val project: Project, private val toolWindow: ToolWin
     private val monitorTab = MonitorTab(sessionStore)
     private val hotSpotsPanel = HotSpotsPanel(sessionStore)
     private val timelinePanel = TimelinePanel(sessionStore)
+    private val stabilityPanel = StabilityPanel(sessionStore)
+    private val historyPanel = HistoryPanel(sessionStore, project)
 
     init {
         setupButtons()
@@ -62,6 +68,16 @@ class ReboundPanel(private val project: Project, private val toolWindow: ToolWin
         val timelineContent = contentManager.factory.createContent(timelinePanel, "Timeline", false)
         timelineContent.isCloseable = false
         contentManager.addContent(timelineContent)
+
+        // Tab 4: Stability
+        val stabilityContent = contentManager.factory.createContent(stabilityPanel, "Stability", false)
+        stabilityContent.isCloseable = false
+        contentManager.addContent(stabilityContent)
+
+        // Tab 5: History
+        val historyContent = contentManager.factory.createContent(historyPanel, "History", false)
+        historyContent.isCloseable = false
+        contentManager.addContent(historyContent)
     }
 
     private fun createToolbarPanel(): JPanel {
@@ -98,6 +114,7 @@ class ReboundPanel(private val project: Project, private val toolWindow: ToolWin
             }
         )
         connection?.start()
+        sessionStore.vcsContext = VcsSessionContext.capture(project)
 
         sessionStore.setConnectionState(true)
         startButton.isEnabled = false
@@ -109,6 +126,23 @@ class ReboundPanel(private val project: Project, private val toolWindow: ToolWin
     private fun stopCapture() {
         connection?.stop()
         connection = null
+
+        // Auto-save session to disk on background thread
+        try {
+            val projectDir = project.basePath?.let { java.io.File(it) }
+            if (projectDir != null && sessionStore.currentEntries.isNotEmpty()) {
+                val sessionData = sessionStore.toSessionData()
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    try {
+                        SessionPersistence.save(projectDir, sessionData)
+                    } catch (_: Exception) {
+                        // Save failure should not prevent stop
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Save failure should not prevent stop
+        }
 
         sessionStore.setConnectionState(false)
         startButton.isEnabled = true
@@ -127,6 +161,8 @@ class ReboundPanel(private val project: Project, private val toolWindow: ToolWin
         monitorTab.dispose()
         hotSpotsPanel.dispose()
         timelinePanel.dispose()
+        stabilityPanel.dispose()
+        historyPanel.dispose()
         ReboundSessionStoreHolder.getInstance(project).sessionStore = null
     }
 }

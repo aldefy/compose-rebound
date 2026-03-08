@@ -39,8 +39,15 @@ class TimelinePanel(private val sessionStore: SessionStore) : JPanel(BorderLayou
         private var composableNames: List<String> = emptyList()
         private var snapshotData: List<TimestampedSnapshot> = emptyList()
 
+        private val MAX_SNAPSHOTS = 720 // ~1 hour at 5s intervals
+
         fun updateData(snapshots: List<TimestampedSnapshot>) {
-            snapshotData = snapshots
+            // Cap to last MAX_SNAPSHOTS to prevent unbounded memory usage
+            snapshotData = if (snapshots.size > MAX_SNAPSHOTS) {
+                snapshots.subList(snapshots.size - MAX_SNAPSHOTS, snapshots.size)
+            } else {
+                snapshots
+            }
 
             // Collect all unique composable names across all snapshots
             val peakRates = mutableMapOf<String, Int>()

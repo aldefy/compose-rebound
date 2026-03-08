@@ -10,9 +10,12 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="rebound-git.xml">Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="io.aldefy.rebound.ide.data.ReboundSettings"/>
+        <applicationConfigurable instance="io.aldefy.rebound.ide.ReboundSettingsConfigurable"
+            displayName="Rebound" groupId="tools"/>
         <projectService serviceImplementation="io.aldefy.rebound.ide.editor.ReboundSessionStoreHolder"/>
         <codeInsight.lineMarkerProvider language="kotlin"
             implementationClass="io.aldefy.rebound.ide.editor.ReboundLineMarkerProvider"/>

@@ -16,6 +16,8 @@ import javax.swing.table.DefaultTableCellRenderer
 class HotSpotsPanel(private val sessionStore: SessionStore) : JPanel(BorderLayout()), SessionListener {
 
     private val entries = mutableListOf<ComposableEntry>()
+    private var lastTableUpdateMs: Long = 0L
+    private val TABLE_UPDATE_THROTTLE_MS = 500L // throttle repaints when >500 composables
 
     private val violationsLabel = JLabel("0 violations").apply {
         foreground = JBColor.RED
@@ -59,6 +61,14 @@ class HotSpotsPanel(private val sessionStore: SessionStore) : JPanel(BorderLayou
         val sorted = entries.sortedByDescending { it.rate }
         this.entries.clear()
         this.entries.addAll(sorted)
+
+        // Throttle table repaints when there are many composables
+        val now = System.currentTimeMillis()
+        if (entries.size > 500 && now - lastTableUpdateMs < TABLE_UPDATE_THROTTLE_MS) {
+            return
+        }
+        lastTableUpdateMs = now
+
         tableModel.fireTableDataChanged()
         updateSummary(sorted)
     }
@@ -100,7 +110,7 @@ class HotSpotsPanel(private val sessionStore: SessionStore) : JPanel(BorderLayou
         }
 
         override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
-            val entry = entries[rowIndex]
+            val entry = entries.getOrNull(rowIndex) ?: return ""
             return when (columnIndex) {
                 0 -> entry.simpleName
                 1 -> entry.rate
