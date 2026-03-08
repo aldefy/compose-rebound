@@ -9,11 +9,22 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="io.aldefy.rebound.ide.data.ReboundSettings"/>
+        <projectService serviceImplementation="io.aldefy.rebound.ide.editor.ReboundSessionStoreHolder"/>
+        <codeInsight.lineMarkerProvider language="kotlin"
+            implementationClass="io.aldefy.rebound.ide.editor.ReboundLineMarkerProvider"/>
         <toolWindow id="Rebound"
                     anchor="bottom"
                     factoryClass="io.aldefy.rebound.ide.ReboundToolWindowFactory"
                     icon="AllIcons.Debugger.Watch"/>
+        <statusBarWidgetFactory implementation="io.aldefy.rebound.ide.editor.ReboundStatusBarWidgetFactory"
+            id="ReboundStatusBar" order="after Position"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+            implementation="io.aldefy.rebound.ide.editor.ReboundCodeVisionProvider"/>
+        <config.codeVisionGroupSettingProvider
+            implementation="io.aldefy.rebound.ide.editor.ReboundCodeVisionSettingsProvider"/>
     </extensions>
 </idea-plugin>
