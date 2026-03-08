@@ -8,8 +8,6 @@
 
 Rebound is a Kotlin compiler plugin that instruments every `@Composable` function with lightweight tracking calls. At runtime, it monitors recomposition rates against per-composable budgets, detects violations, and reports them via an Android Studio tool window, CLI, or logcat. Zero config required — just apply the Gradle plugin. The IDE plugin provides a 5-tab performance cockpit with live monitoring, hot spots ranking, timeline heatmap, stability analysis, and session history with VCS correlation.
 
-![Rebound IDE plugin](assets/rebound-ide-walkthrough.gif)
-
 ## Features
 
 - **Budget classes** — auto-classifies composables (Screen, Container, Interactive, List Item, Animated, Leaf) with appropriate rate budgets
@@ -65,19 +63,7 @@ Connect the IDE plugin or CLI for richer output.
 
 ## Architecture
 
-```
-┌─────────────────┐     ┌──────────────────┐
-│ rebound-compiler │────▶│  rebound-runtime  │
-│  (IR transform)  │     │  (tracking core)  │
-└─────────────────┘     └────────┬─────────┘
-                                 │
-                    ┌────────────┼────────────┐
-                    ▼            ▼             ▼
-              ┌──────────┐ ┌──────────┐ ┌──────────┐
-              │   IDE    │ │   CLI    │ │  Logcat  │
-              │ (socket) │ │ (socket) │ │ (warns)  │
-              └──────────┘ └──────────┘ └──────────┘
-```
+![Rebound architecture — compile time to runtime to IDE](assets/diagrams/03-rebound-architecture.svg)
 
 The compiler plugin injects `ReboundTracker.onCompositionEnter/Exit` calls into every `@Composable` function at the IR level. The runtime tracks rates per sliding window and reports violations. The IDE plugin and CLI connect via `LocalServerSocket("rebound")` forwarded through ADB.
 
@@ -109,6 +95,8 @@ ReboundTracker.logCompositions = false   // Per-composition logcat (throttled 1/
 ```
 
 ## Budget Classes
+
+![Recomposition budgets by composable role](assets/diagrams/02-budget-tiers.svg)
 
 Each composable is auto-classified by IR heuristics:
 
@@ -190,6 +178,8 @@ fun TiltDrivenSticker(offset: Offset) { ... }
 ```
 
 ## IDE Plugin
+
+![Rebound IDE cockpit](assets/diagrams/06-ide-cockpit.svg)
 
 The Android Studio plugin (targets 2024.2.1.3+) provides a 5-tab performance cockpit, editor integration, and session persistence. Configure via Preferences > Tools > Rebound.
 
