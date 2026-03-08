@@ -36,6 +36,7 @@ object SnapshotParser {
             val paramDrivenCount = extractLong(body, "paramDrivenCount")
             val peak = extractInt(body, "peakRate")
             val lastInvalidation = extractString(body, "lastInvalidation")
+            val paramStates = extractString(body, "paramStates")
             val parent = extractString(body, "parent")
             val depth = extractInt(body, "depth")
 
@@ -54,7 +55,8 @@ object SnapshotParser {
                 peakRate = peak,
                 invalidationReason = lastInvalidation,
                 parentFqn = parent,
-                depth = depth
+                depth = depth,
+                paramStates = paramStates
             )
         }.toList()
     }

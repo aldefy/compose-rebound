@@ -122,6 +122,16 @@ object ReboundTracker {
             ChangedMaskDecoder.isForced(changedMask)
         }
 
+        // Store last param states for snapshot export (always, not just when logging)
+        if (paramNames.isNotEmpty()) {
+            val decoded = if (hasMultiMasks) {
+                ChangedMaskDecoder.decodeFromString(changedMasks, paramNames)
+            } else {
+                ChangedMaskDecoder.decode(changedMask, paramNames)
+            }
+            m.lastParamStates = decoded.joinToString(",") { "${it.first}=${it.second.name}" }
+        }
+
         if (logCompositions) {
             val lastLog = lastLogTime[key] ?: 0L
             val elapsed = now - lastLog
@@ -203,6 +213,7 @@ object ReboundTracker {
                     paramDrivenCount = m.paramDrivenRecompositionCount,
                     lastInvalidation = getLastInvalidationReason(key),
                     parent = parentMap[key] ?: "",
+                    paramStates = m.lastParamStates,
                     depth = depthMap[key] ?: 0
                 )
             }

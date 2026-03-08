@@ -13,11 +13,21 @@ data class ComposableEntry(
     var peakRate: Int = 0,
     var invalidationReason: String = "",
     var parentFqn: String = "",
-    var depth: Int = 0
+    var depth: Int = 0,
+    var paramStates: String = ""
 ) {
-    /** Simple function name, e.g. "StickerCanvas" */
+    /** Simple function name, e.g. "StickerCanvas" or "HomeScreen.Scaffold{}" */
     val simpleName: String
-        get() = name.substringAfterLast('.')
+        get() {
+            val last = name.substringAfterLast('.')
+            // For lambda names (λN or Scaffold{}), include the parent for context
+            if (last.startsWith("λ") || last.endsWith("{}")) {
+                val parts = name.split('.')
+                val parentIdx = parts.size - 2
+                if (parentIdx >= 0) return "${parts[parentIdx]}.$last"
+            }
+            return last
+        }
 
     val reason: String
         get() = when {

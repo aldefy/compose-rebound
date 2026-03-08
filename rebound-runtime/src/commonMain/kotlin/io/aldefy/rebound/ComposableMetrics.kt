@@ -12,6 +12,9 @@ class ComposableMetrics(var budgetClass: BudgetClass) {
     @Volatile private var forcedCount: Long = 0
     @Volatile private var paramDrivenCount: Long = 0
 
+    /** Last decoded parameter states from $changed bitmask, e.g. "user=DIFFERENT,onClick=STATIC" */
+    @Volatile var lastParamStates: String = ""
+
     val totalCount: Long get() = compositionCount
 
     val forcedRecompositionCount: Long get() = forcedCount

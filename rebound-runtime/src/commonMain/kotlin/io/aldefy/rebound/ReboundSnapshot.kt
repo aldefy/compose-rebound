@@ -20,6 +20,7 @@ data class ReboundSnapshot(
         val paramDrivenCount: Long = 0,
         val lastInvalidation: String = "",
         val parent: String = "",
+        val paramStates: String = "",
         val depth: Int = 0
     )
 
@@ -43,6 +44,7 @@ data class ReboundSnapshot(
             sb.append("      \"paramDrivenCount\": ${snap.paramDrivenCount},\n")
             sb.append("      \"lastInvalidation\": \"${escapeJson(snap.lastInvalidation)}\",\n")
             sb.append("      \"parent\": \"${escapeJson(snap.parent)}\",\n")
+            sb.append("      \"paramStates\": \"${escapeJson(snap.paramStates)}\",\n")
             sb.append("      \"depth\": ${snap.depth}\n")
             sb.append("    }")
             if (i < entries.size - 1) sb.append(",")
@@ -90,6 +92,7 @@ data class ReboundSnapshot(
                     paramDrivenCount = extractLong("paramDrivenCount"),
                     lastInvalidation = extractString("lastInvalidation"),
                     parent = extractString("parent"),
+                    paramStates = extractString("paramStates"),
                     depth = extractInt("depth")
                 )
             }
