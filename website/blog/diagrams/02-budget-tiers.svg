@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="440" fill="url(#bg2)" rx="12"/>
+
+  <!-- Title -->
+  <text x="440" y="36" fill="#e6edf3" font-size="17" font-weight="700" text-anchor="middle">Recomposition Budgets by Composable Role</text>
+  <text x="440" y="56" fill="#8b949e" font-size="11" text-anchor="middle">Same rate, different verdict — context determines whether a recomposition count is healthy</text>
+
+  <!--
+    Clean grid:
+    x=45:  Color dot (circle r=6)
+    x=66:  Role name (14px bold), y=rowY
+    x=66:  Description (10px gray), y=rowY+15
+    x=260: Budget pill (right-aligned, 48px wide)
+    x=325: Bar start
+    x=840: Bar max end (515px total = 120/s)
+    Row height: 55px, first row at y=90
+  -->
+
+  <!-- Row 1: Screen 3/s — bar width: 515*(3/120) = 13 -->
+  <circle cx="45" cy="97" r="6" fill="none" stroke="#3b82f6" stroke-width="2"/>
+  <text x="66" y="94" fill="#e6edf3" font-size="14" font-weight="600">Screen</text>
+  <text x="66" y="110" fill="#6b7280" font-size="10">Navigation, major state</text>
+  <rect x="258" y="85" width="46" height="24" rx="5" fill="#1e3a5f"/>
+  <text x="281" y="101" fill="#58a6ff" font-size="11" font-weight="700" text-anchor="middle">3/s</text>
+  <rect x="325" y="93" width="13" height="8" rx="4" fill="#3b82f6"/>
+
+  <!-- Row 2: Leaf 5/s — bar width: 515*(5/120) = 21 -->
+  <circle cx="45" cy="152" r="6" fill="none" stroke="#22c55e" stroke-width="2"/>
+  <text x="66" y="149" fill="#e6edf3" font-size="14" font-weight="600">Leaf</text>
+  <text x="66" y="165" fill="#6b7280" font-size="10">Text, Icon — shouldn't thrash</text>
+  <rect x="258" y="140" width="46" height="24" rx="5" fill="#14532d"/>
+  <text x="281" y="156" fill="#4ade80" font-size="11" font-weight="700" text-anchor="middle">5/s</text>
+  <rect x="325" y="148" width="21" height="8" rx="4" fill="#22c55e"/>
+
+  <!-- Row 3: Container 10/s — bar width: 515*(10/120) = 43 -->
+  <circle cx="45" cy="207" r="6" fill="none" stroke="#06b6d4" stroke-width="2"/>
+  <text x="66" y="204" fill="#e6edf3" font-size="14" font-weight="600">Container</text>
+  <text x="66" y="220" fill="#6b7280" font-size="10">Column, Box — child changes</text>
+  <rect x="250" y="195" width="54" height="24" rx="5" fill="#164e63"/>
+  <text x="277" y="211" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">10/s</text>
+  <rect x="325" y="203" width="43" height="8" rx="4" fill="#06b6d4"/>
+
+  <!-- Row 4: Interactive 30/s — bar width: 515*(30/120) = 129 -->
+  <circle cx="45" cy="262" r="6" fill="none" stroke="#eab308" stroke-width="2"/>
+  <text x="66" y="259" fill="#e6edf3" font-size="14" font-weight="600">Interactive</text>
+  <text x="66" y="275" fill="#6b7280" font-size="10">TextField, buttons — fast input</text>
+  <rect x="250" y="250" width="54" height="24" rx="5" fill="#713f12"/>
+  <text x="277" y="266" fill="#facc15" font-size="11" font-weight="700" text-anchor="middle">30/s</text>
+  <rect x="325" y="258" width="129" height="8" rx="4" fill="#eab308"/>
+
+  <!-- Row 5: List Item 60/s — bar width: 515*(60/120) = 258 -->
+  <circle cx="45" cy="317" r="6" fill="none" stroke="#f97316" stroke-width="2"/>
+  <text x="66" y="314" fill="#e6edf3" font-size="14" font-weight="600">List Item</text>
+  <text x="66" y="330" fill="#6b7280" font-size="10">LazyColumn — per frame at 60fps</text>
+  <rect x="250" y="305" width="54" height="24" rx="5" fill="#7c2d12"/>
+  <text x="277" y="321" fill="#fb923c" font-size="11" font-weight="700" text-anchor="middle">60/s</text>
+  <rect x="325" y="313" width="258" height="8" rx="4" fill="#f97316"/>
+
+  <!-- Row 6: Animated 120/s — bar width: 515 -->
+  <circle cx="45" cy="372" r="6" fill="none" stroke="#ef4444" stroke-width="2"/>
+  <text x="66" y="369" fill="#e6edf3" font-size="14" font-weight="600">Animated</text>
+  <text x="66" y="385" fill="#6b7280" font-size="10">Gesture, spring physics</text>
+  <rect x="242" y="360" width="62" height="24" rx="5" fill="#7f1d1d"/>
+  <text x="273" y="376" fill="#f87171" font-size="11" font-weight="700" text-anchor="middle">120/s</text>
+  <rect x="325" y="368" width="515" height="8" rx="4" fill="#ef4444"/>
+
+  <!-- Scale axis -->
+  <rect x="325" y="405" width="515" height="2" rx="1" fill="#21262d"/>
+  <text x="325" y="425" fill="#484f58" font-size="9">0/s</text>
+  <text x="582" y="425" fill="#484f58" font-size="9" text-anchor="middle">60/s</text>
+  <text x="840" y="425" fill="#484f58" font-size="9" text-anchor="end">120/s</text>
+</svg>

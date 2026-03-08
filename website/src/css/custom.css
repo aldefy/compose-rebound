@@ -1,0 +1,118 @@
+/**
+ * Rebound documentation site -- custom styles.
+ * Purple/blue theme to match Kotlin branding.
+ */
+
+:root {
+  --ifm-color-primary: #7c4dff;
+  --ifm-color-primary-dark: #6535ff;
+  --ifm-color-primary-darker: #5a2aff;
+  --ifm-color-primary-darkest: #3d00e0;
+  --ifm-color-primary-light: #936dff;
+  --ifm-color-primary-lighter: #9e7fff;
+  --ifm-color-primary-lightest: #bea6ff;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(124, 77, 255, 0.1);
+  --ifm-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #b388ff;
+  --ifm-color-primary-dark: #9b66ff;
+  --ifm-color-primary-darker: #8f55ff;
+  --ifm-color-primary-darkest: #6b22ff;
+  --ifm-color-primary-light: #cba9ff;
+  --ifm-color-primary-lighter: #d7bbff;
+  --ifm-color-primary-lightest: #f0e6ff;
+  --docusaurus-highlighted-code-line-bg: rgba(179, 136, 255, 0.15);
+  --ifm-background-color: #1a1a2e;
+  --ifm-background-surface-color: #16213e;
+}
+
+/* Hero section */
+.hero--rebound {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+[data-theme='light'] .hero--rebound {
+  background: linear-gradient(135deg, #f5f0ff 0%, #e8e0ff 50%, #ddd6fe 100%);
+  color: #1a1a2e;
+}
+
+.hero--rebound .hero__title {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hero--rebound .hero__subtitle {
+  font-size: 1.25rem;
+  opacity: 0.85;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.hero--rebound .button--primary {
+  background-color: #7c4dff;
+  border-color: #7c4dff;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+}
+
+.hero--rebound .button--primary:hover {
+  background-color: #6535ff;
+  border-color: #6535ff;
+  color: #fff;
+}
+
+/* Feature cards */
+.feature-cards {
+  padding: 4rem 0;
+}
+
+.feature-card {
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
+  height: 100%;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.feature-card p {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+}
+
+/* Code preview section */
+.code-preview {
+  padding: 2rem 0 4rem;
+  text-align: center;
+}
+
+.code-preview pre {
+  text-align: left;
+  display: inline-block;
+  max-width: 500px;
+  width: 100%;
+}
+
+@media screen and (max-width: 996px) {
+  .hero--rebound {
+    padding: 2rem 1rem;
+  }
+
+  .hero--rebound .hero__title {
+    font-size: 2rem;
+  }
+}

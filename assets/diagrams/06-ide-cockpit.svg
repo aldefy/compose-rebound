@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg6" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="activeTab" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <filter id="s6">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow6">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="900" height="520" fill="url(#bg6)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="32" fill="#e6edf3" font-size="16" font-weight="700" text-anchor="middle">Rebound IDE Plugin — The Compose Performance Cockpit</text>
+
+  <!-- IDE window frame -->
+  <rect x="30" y="50" width="840" height="420" rx="8" fill="#1a1e2e" stroke="#30363d" stroke-width="1.5" filter="url(#s6)"/>
+
+  <!-- Tab bar -->
+  <rect x="30" y="50" width="840" height="36" rx="8" fill="#161b22"/>
+  <rect x="30" y="72" width="840" height="14" fill="#161b22"/>
+
+  <!-- Tab 1: Monitor (active) -->
+  <rect x="38" y="54" width="100" height="28" rx="5" fill="url(#activeTab)"/>
+  <text x="88" y="73" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">Monitor</text>
+
+  <!-- Tab 2: Hot Spots -->
+  <rect x="146" y="54" width="100" height="28" rx="5" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="196" y="73" fill="#8b949e" font-size="11" font-weight="600" text-anchor="middle">Hot Spots</text>
+
+  <!-- Tab 3: Timeline -->
+  <rect x="254" y="54" width="100" height="28" rx="5" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="304" y="73" fill="#8b949e" font-size="11" font-weight="600" text-anchor="middle">Timeline</text>
+
+  <!-- Tab 4: Stability (coming) -->
+  <rect x="362" y="54" width="100" height="28" rx="5" fill="#21262d" stroke="#30363d" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="412" y="73" fill="#484f58" font-size="11" font-weight="600" text-anchor="middle">Stability</text>
+
+  <!-- Tab 5: History (coming) -->
+  <rect x="470" y="54" width="100" height="28" rx="5" fill="#21262d" stroke="#30363d" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="520" y="73" fill="#484f58" font-size="11" font-weight="600" text-anchor="middle">History</text>
+
+  <!-- "coming soon" label -->
+  <text x="442" y="44" fill="#484f58" font-size="8" text-anchor="middle">coming next</text>
+
+  <!-- Monitor tab content - split into tree + event log -->
+
+  <!-- LEFT: Composable tree -->
+  <rect x="38" y="92" width="420" height="370" rx="4" fill="#0d1117" stroke="#21262d" stroke-width="1"/>
+  <text x="50" y="112" fill="#8b949e" font-size="10" font-weight="600">COMPOSABLE TREE</text>
+
+  <!-- Tree entries -->
+  <!-- HomeScreen -->
+  <text x="50" y="136" fill="#e6edf3" font-size="11" font-family="'JetBrains Mono', monospace">▼ HomeScreen</text>
+  <text x="290" y="136" fill="#4ade80" font-size="10" font-family="'JetBrains Mono', monospace">2/s</text>
+  <text x="340" y="136" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">SCR 3/s</text>
+  <!-- mini sparkline placeholder -->
+  <polyline points="400,128 405,132 410,130 415,131 420,129 425,132 430,130 435,131 440,128" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+
+  <!-- HomeScreen.Scaffold{} -->
+  <text x="68" y="156" fill="#c9d1d9" font-size="11" font-family="'JetBrains Mono', monospace">├─ HomeScreen.Scaffold{}</text>
+  <text x="290" y="156" fill="#4ade80" font-size="10" font-family="'JetBrains Mono', monospace">2/s</text>
+  <text x="340" y="156" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">CTR 10/s</text>
+  <polyline points="400,148 405,152 410,150 415,150 420,149 425,152 430,149 435,151 440,148" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+
+  <!-- UserList -->
+  <text x="86" y="176" fill="#c9d1d9" font-size="11" font-family="'JetBrains Mono', monospace">├─ UserList</text>
+  <text x="290" y="176" fill="#eab308" font-size="10" font-family="'JetBrains Mono', monospace">45/s</text>
+  <text x="340" y="176" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">LST 60/s</text>
+  <polyline points="400,168 405,172 408,165 411,174 414,167 417,175 420,166 423,173 426,168 429,176 432,167 435,173 438,169 441,171" fill="none" stroke="#eab308" stroke-width="1.5"/>
+
+  <!-- ProfileHeader - VIOLATION -->
+  <rect x="84" y="182" width="370" height="20" rx="3" fill="#3b0712" opacity="0.4"/>
+  <text x="86" y="196" fill="#f87171" font-size="11" font-family="'JetBrains Mono', monospace" font-weight="700">├─ ProfileHeader</text>
+  <text x="280" y="196" fill="#ef4444" font-size="10" font-family="'JetBrains Mono', monospace" font-weight="700">11/s ⚠</text>
+  <text x="340" y="196" fill="#ef4444" font-size="10" font-family="'JetBrains Mono', monospace">LEA 5/s</text>
+  <polyline points="400,188 403,193 406,186 409,195 412,184 415,196 418,185 421,194 424,187 427,195 430,184 433,196 436,185 439,194 442,188" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+
+  <!-- Avatar.Box{} -->
+  <text x="104" y="216" fill="#c9d1d9" font-size="11" font-family="'JetBrains Mono', monospace">│  ├─ Avatar.Box{}</text>
+  <text x="290" y="216" fill="#4ade80" font-size="10" font-family="'JetBrains Mono', monospace">1/s</text>
+  <text x="340" y="216" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">LEA 5/s</text>
+
+  <!-- AnimatedBadge -->
+  <text x="104" y="236" fill="#c9d1d9" font-size="11" font-family="'JetBrains Mono', monospace">│  └─ AnimatedBadge</text>
+  <text x="290" y="236" fill="#4ade80" font-size="10" font-family="'JetBrains Mono', monospace">60/s</text>
+  <text x="340" y="236" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">ANI 120/s</text>
+  <polyline points="400,228 402,231 404,225 406,234 408,224 410,233 412,225 414,232 416,226 418,233 420,224 422,234 424,225" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+
+  <!-- Settings.LazyColumn{} -->
+  <text x="86" y="256" fill="#c9d1d9" font-size="11" font-family="'JetBrains Mono', monospace">└─ Settings.LazyColumn{}</text>
+  <text x="290" y="256" fill="#4ade80" font-size="10" font-family="'JetBrains Mono', monospace">0/s</text>
+  <text x="340" y="256" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">LST 60/s</text>
+
+  <!-- Detail panel for ProfileHeader -->
+  <rect x="48" y="275" width="400" height="105" rx="4" fill="#161b22" stroke="#ef4444" stroke-width="1"/>
+  <text x="60" y="295" fill="#f87171" font-size="10" font-weight="700">BUDGET VIOLATION — ProfileHeader</text>
+  <text x="60" y="315" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace">Rate: <tspan fill="#ef4444">11/s</tspan>  Budget: 5/s (LEAF)  Skip: 12%</text>
+  <text x="60" y="335" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace">Params: avatarUrl=<tspan fill="#ef4444">CHANGED</tspan> displayName=<tspan fill="#ef4444">CHANGED</tspan></text>
+  <text x="60" y="355" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace">Forced: 0  Param-driven: 11  State: <tspan fill="#22c55e">IDLE</tspan></text>
+  <text x="60" y="375" fill="#8b949e" font-size="9" font-family="'JetBrains Mono', monospace">→ avatarUrl changing while IDLE suggests upstream state leak</text>
+
+  <!-- Legend row at bottom of tree -->
+  <rect x="48" y="392" width="400" height="24" rx="3" fill="#161b22"/>
+  <circle cx="60" cy="404" r="4" fill="#4ade80"/>
+  <text x="70" y="408" fill="#8b949e" font-size="9">OK</text>
+  <circle cx="100" cy="404" r="4" fill="#eab308"/>
+  <text x="110" y="408" fill="#8b949e" font-size="9">Near budget</text>
+  <circle cx="170" cy="404" r="4" fill="#ef4444"/>
+  <text x="180" y="408" fill="#8b949e" font-size="9">Over budget</text>
+  <text x="250" y="408" fill="#484f58" font-size="9">SCR=Screen CTR=Container LST=List LEA=Leaf ANI=Animated</text>
+
+  <!-- RIGHT: Event log -->
+  <rect x="466" y="92" width="396" height="175" rx="4" fill="#0d1117" stroke="#21262d" stroke-width="1"/>
+  <text x="478" y="112" fill="#8b949e" font-size="10" font-weight="600">EVENT LOG</text>
+
+  <text x="478" y="132" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:31</text>
+  <text x="538" y="132" fill="#ef4444" font-size="9" font-family="'JetBrains Mono', monospace">VIOLATION</text>
+  <text x="600" y="132" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">ProfileHeader 11/s > 5/s</text>
+
+  <text x="478" y="150" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:28</text>
+  <text x="538" y="150" fill="#eab308" font-size="9" font-family="'JetBrains Mono', monospace">RATE SPIKE</text>
+  <text x="608" y="150" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">UserList 45/s (scroll)</text>
+
+  <text x="478" y="168" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:25</text>
+  <text x="538" y="168" fill="#58a6ff" font-size="9" font-family="'JetBrains Mono', monospace">STATE</text>
+  <text x="578" y="168" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">interaction → SCROLLING</text>
+
+  <text x="478" y="186" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:22</text>
+  <text x="538" y="186" fill="#58a6ff" font-size="9" font-family="'JetBrains Mono', monospace">STATE</text>
+  <text x="578" y="186" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">interaction → IDLE</text>
+
+  <text x="478" y="204" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:18</text>
+  <text x="538" y="204" fill="#4ade80" font-size="9" font-family="'JetBrains Mono', monospace">RESOLVED</text>
+  <text x="605" y="204" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">NavHeader back to 2/s</text>
+
+  <text x="478" y="222" fill="#484f58" font-size="9" font-family="'JetBrains Mono', monospace">12:04:12</text>
+  <text x="538" y="222" fill="#ef4444" font-size="9" font-family="'JetBrains Mono', monospace">VIOLATION</text>
+  <text x="600" y="222" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">NavHeader 8/s > 5/s</text>
+
+  <!-- RIGHT BOTTOM: Editor with gutter icons -->
+  <rect x="466" y="275" width="396" height="185" rx="4" fill="#0d1117" stroke="#21262d" stroke-width="1"/>
+  <text x="478" y="295" fill="#8b949e" font-size="10" font-weight="600">EDITOR — Gutter Icons</text>
+
+  <!-- Line numbers + gutter icons + code -->
+  <text x="478" y="318" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">42</text>
+  <circle cx="499" cy="314" r="5" fill="#4ade80" filter="url(#glow6)"/>
+  <text x="512" y="318" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace"><tspan fill="#ff7b72">@Composable</tspan></text>
+
+  <text x="478" y="336" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">43</text>
+  <text x="512" y="336" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace"><tspan fill="#ff7b72">fun</tspan> <tspan fill="#d2a8ff">HomeScreen</tspan>() {</text>
+
+  <text x="478" y="354" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">44</text>
+  <text x="512" y="354" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">  ...</text>
+
+  <text x="478" y="378" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">67</text>
+  <circle cx="499" cy="374" r="5" fill="#ef4444" filter="url(#glow6)"/>
+  <text x="512" y="378" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace"><tspan fill="#ff7b72">@Composable</tspan></text>
+
+  <text x="478" y="396" fill="#484f58" font-size="10" font-family="'JetBrains Mono', monospace">68</text>
+  <text x="512" y="396" fill="#c9d1d9" font-size="10" font-family="'JetBrains Mono', monospace"><tspan fill="#ff7b72">fun</tspan> <tspan fill="#d2a8ff">ProfileHeader</tspan>(</text>
+
+  <!-- Gutter popup -->
+  <rect x="518" y="402" width="240" height="45" rx="4" fill="#1a1e2e" stroke="#ef4444" stroke-width="1" filter="url(#s6)"/>
+  <text x="530" y="418" fill="#f87171" font-size="9" font-weight="600">ProfileHeader — OVER BUDGET</text>
+  <text x="530" y="434" fill="#c9d1d9" font-size="9" font-family="'JetBrains Mono', monospace">11/s | budget: 5/s | skip: 12%</text>
+  <text x="530" y="446" fill="#8b949e" font-size="8">Click to open in Rebound panel</text>
+
+  <!-- Summary bar at very bottom -->
+  <rect x="30" y="478" width="840" height="24" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="48" y="494" fill="#8b949e" font-size="10">Rebound:</text>
+  <text x="108" y="494" fill="#e6edf3" font-size="10" font-weight="600">29 composables</text>
+  <text x="220" y="494" fill="#30363d" font-size="10">|</text>
+  <text x="232" y="494" fill="#ef4444" font-size="10" font-weight="600">1 violation</text>
+  <text x="316" y="494" fill="#30363d" font-size="10">|</text>
+  <text x="328" y="494" fill="#eab308" font-size="10" font-weight="600">2 near budget</text>
+  <text x="434" y="494" fill="#30363d" font-size="10">|</text>
+  <text x="446" y="494" fill="#4ade80" font-size="10" font-weight="600">26 OK</text>
+  <text x="790" y="494" fill="#484f58" font-size="10" text-anchor="end">Connected via socket • debug build</text>
+</svg>

@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="reboundGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="520" fill="url(#bg)" rx="12"/>
+
+  <!-- Grid lines -->
+  <line x1="100" y1="80" x2="100" y2="440" stroke="#21262d" stroke-width="1"/>
+  <line x1="100" y1="440" x2="860" y2="440" stroke="#21262d" stroke-width="1"/>
+
+  <!-- Y-axis labels -->
+  <text x="90" y="440" fill="#8b949e" font-size="11" text-anchor="end">Static</text>
+  <text x="90" y="260" fill="#8b949e" font-size="11" text-anchor="end">Runtime</text>
+  <text x="90" y="110" fill="#8b949e" font-size="11" text-anchor="end">Runtime +</text>
+  <text x="90" y="125" fill="#8b949e" font-size="11" text-anchor="end">Budgets</text>
+
+  <!-- X-axis labels -->
+  <text x="230" y="475" fill="#8b949e" font-size="11" text-anchor="middle">Manual setup</text>
+  <text x="480" y="475" fill="#8b949e" font-size="11" text-anchor="middle">Semi-automated</text>
+  <text x="730" y="475" fill="#8b949e" font-size="11" text-anchor="middle">Zero config</text>
+
+  <!-- Y-axis title -->
+  <text x="25" y="280" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle" transform="rotate(-90 25 280)">Analysis Depth</text>
+
+  <!-- X-axis title -->
+  <text x="480" y="505" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Developer Effort</text>
+
+  <!-- Dashed grid -->
+  <line x1="100" y1="260" x2="860" y2="260" stroke="#21262d" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="355" y1="80" x2="355" y2="440" stroke="#21262d" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="605" y1="80" x2="605" y2="440" stroke="#21262d" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Tool bubbles -->
+  <!-- Compiler Reports - static, semi-auto -->
+  <circle cx="420" cy="400" r="36" fill="#1f2937" stroke="#3b82f6" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="420" y="396" fill="#93c5fd" font-size="10" font-weight="600" text-anchor="middle">Compiler</text>
+  <text x="420" y="410" fill="#93c5fd" font-size="10" font-weight="600" text-anchor="middle">Reports</text>
+
+  <!-- Stability Analyzer - static, semi-auto -->
+  <circle cx="540" cy="380" r="32" fill="#1f2937" stroke="#3b82f6" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="540" y="376" fill="#93c5fd" font-size="9.5" font-weight="600" text-anchor="middle">Stability</text>
+  <text x="540" y="389" fill="#93c5fd" font-size="9.5" font-weight="600" text-anchor="middle">Analyzer</text>
+
+  <!-- Rebugger - runtime, manual -->
+  <circle cx="200" cy="280" r="30" fill="#1f2937" stroke="#a78bfa" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="200" y="283" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">Rebugger</text>
+
+  <!-- Layout Inspector - runtime, semi-auto -->
+  <circle cx="460" cy="250" r="40" fill="#1f2937" stroke="#a78bfa" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="460" y="246" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">Layout</text>
+  <text x="460" y="260" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">Inspector</text>
+
+  <!-- ComposeInvestigator - runtime, zero-config-ish -->
+  <circle cx="640" cy="240" r="34" fill="#1f2937" stroke="#a78bfa" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="640" y="234" fill="#c4b5fd" font-size="9" font-weight="600" text-anchor="middle">Compose</text>
+  <text x="640" y="248" fill="#c4b5fd" font-size="9" font-weight="600" text-anchor="middle">Investigator</text>
+
+  <!-- VKompose - runtime, zero-config -->
+  <circle cx="710" cy="300" r="30" fill="#1f2937" stroke="#a78bfa" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="710" y="303" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">VKompose</text>
+
+  <!-- Perfetto - runtime, manual -->
+  <circle cx="180" cy="200" r="28" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="180" y="203" fill="#9ca3af" font-size="10" font-weight="600" text-anchor="middle">Perfetto</text>
+
+  <!-- Recompose Highlighter - runtime, zero-config but shallow -->
+  <circle cx="730" cy="370" r="24" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" filter="url(#softShadow)"/>
+  <text x="730" y="365" fill="#9ca3af" font-size="8.5" font-weight="600" text-anchor="middle">Recompose</text>
+  <text x="730" y="377" fill="#9ca3af" font-size="8.5" font-weight="600" text-anchor="middle">Highlighter</text>
+
+  <!-- REBOUND - runtime+budgets, zero config -->
+  <circle cx="750" cy="130" r="48" fill="url(#reboundGrad)" opacity="0.15" filter="url(#glow)"/>
+  <circle cx="750" cy="130" r="48" fill="none" stroke="url(#reboundGrad)" stroke-width="2.5"/>
+  <text x="750" y="126" fill="#fb923c" font-size="16" font-weight="700" text-anchor="middle">Rebound</text>
+  <text x="750" y="145" fill="#fdba74" font-size="10" text-anchor="middle">budgets + zero config</text>
+
+  <!-- Legend -->
+  <rect x="120" y="25" width="12" height="12" rx="6" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="138" y="35" fill="#8b949e" font-size="11">Static analysis</text>
+  <rect x="260" y="25" width="12" height="12" rx="6" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="278" y="35" fill="#8b949e" font-size="11">Runtime tracking</text>
+  <rect x="420" y="25" width="12" height="12" rx="6" fill="none" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="438" y="35" fill="#8b949e" font-size="11">System-level / visual only</text>
+  <rect x="640" y="25" width="12" height="12" rx="6" fill="none" stroke="url(#reboundGrad)" stroke-width="2"/>
+  <text x="658" y="35" fill="#fb923c" font-size="11" font-weight="600">Runtime + budgets</text>
+</svg>
