@@ -10,13 +10,19 @@ import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irString
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.expressions.IrBlock
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
+import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
+import org.jetbrains.kotlin.ir.expressions.IrWhen
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrBranchImpl
@@ -43,6 +49,19 @@ class ReboundIrTransformer(
 ) : IrElementTransformerVoid() {
 
     private var loggedChangedWarning = false
+    private val lambdaCounters = mutableMapOf<String, Int>()
+
+    /** Compose runtime internal calls to skip when scanning for the primary composable call. */
+    private val composeInternalCalls = setOf(
+        "startRestartGroup", "endRestartGroup",
+        "startReplaceableGroup", "endReplaceableGroup",
+        "startMovableGroup", "endMovableGroup",
+        "startNode", "endNode",
+        "skipToGroupEnd", "skipCurrentGroup",
+        "sourceInformation", "sourceInformationMarkerStart", "sourceInformationMarkerEnd",
+        "isTraceInProgress", "traceEventStart", "traceEventEnd",
+        "joinKey", "changed", "updateChangedFlags"
+    )
 
     private val composableAnnotation = FqName("androidx.compose.runtime.Composable")
 
@@ -103,7 +122,7 @@ class ReboundIrTransformer(
         val trackerFn = onCompositionFn ?: return function
 
         val builder = DeclarationIrBuilder(pluginContext, function.symbol)
-        val fqName = function.kotlinFqName.asString()
+        val fqName = resolveComposableKey(function)
 
         // Collect all $changed parameters ($changed, $changed1, $changed2, ...)
         // injected by the Compose compiler. Sorted by suffix index.
@@ -168,39 +187,6 @@ class ReboundIrTransformer(
             }
         }
 
-        // --- Build onComposition guard (if !$composer.skipping) ---
-        val composerParam = function.valueParameters.firstOrNull {
-            it.name.asString() == "\$composer"
-        }
-        val skippingGetterFn = skippingGetter
-
-        val onCompositionStatement = if (composerParam != null && skippingGetterFn != null) {
-            val getSkipping = builder.irCall(skippingGetterFn).apply {
-                dispatchReceiver = builder.irGet(composerParam)
-            }
-            val nopBlock = IrBlockImpl(
-                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                pluginContext.irBuiltIns.unitType, null,
-                emptyList()
-            )
-            val compositionBlock = IrBlockImpl(
-                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                pluginContext.irBuiltIns.unitType, null,
-                listOf(trackCall)
-            )
-            val constTrue = IrConstImpl.boolean(UNDEFINED_OFFSET, UNDEFINED_OFFSET, pluginContext.irBuiltIns.booleanType, true)
-            IrWhenImpl(
-                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                pluginContext.irBuiltIns.unitType, null,
-                listOf(
-                    IrBranchImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, getSkipping, nopBlock),
-                    IrElseBranchImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, constTrue, compositionBlock)
-                )
-            )
-        } else {
-            trackCall
-        }
-
         // --- Build onEnter call ---
         val enterFn = onEnterFn
         val exitFn = onExitFn
@@ -222,17 +208,27 @@ class ReboundIrTransformer(
             }
         } else null
 
+        // --- Inject onComposition inside Compose's non-skip branch ---
+        // The Compose compiler generates a skip check like:
+        //   if ($dirty and mask != expected || !$composer.skipping) {
+        //       ... body ...    // NON-SKIP
+        //   } else {
+        //       $composer.skipToGroupEnd()  // SKIP
+        //   }
+        // We inject onComposition as the first statement of the non-skip branch.
+        // This is the ONLY correct placement because $composer.skipping can be
+        // true even when the body executes (parent passes changed params).
+        val injectedInNonSkipBranch = injectInComposeNonSkipBranch(body, trackCall)
+
         // --- Wrap body in try-finally for onExit ---
         // Structure:
         //   onEnter(key)
         //   try {
-        //       if (!$composer.skipping) { onComposition(key, ...) }
-        //       ... original body ...
+        //       ... original body (with onComposition in non-skip branch) ...
         //   } finally {
         //       onExit(key)
         //   }
         if (exitCall != null) {
-            // Collect original body statements
             val originalStatements = body.statements.toList()
             body.statements.clear()
 
@@ -241,9 +237,11 @@ class ReboundIrTransformer(
                 body.statements.add(enterCall)
             }
 
-            // Build try body: onComposition guard + original statements
-            val tryBodyStatements = mutableListOf<org.jetbrains.kotlin.ir.IrStatement>()
-            tryBodyStatements.add(onCompositionStatement)
+            // If we couldn't find Compose's non-skip branch, prepend onComposition
+            val tryBodyStatements = mutableListOf<IrStatement>()
+            if (!injectedInNonSkipBranch) {
+                tryBodyStatements.add(trackCall)
+            }
             tryBodyStatements.addAll(originalStatements)
 
             val tryBody = IrBlockImpl(
@@ -268,15 +266,114 @@ class ReboundIrTransformer(
 
             body.statements.add(tryFinally)
         } else {
-            // Fallback: no onExit available — inject onEnter + onComposition as before
+            // Fallback: no onExit available — inject onEnter + onComposition
             if (enterCall != null) {
                 body.statements.add(0, enterCall)
             }
-            val insertPos = if (enterCall != null) 1 else 0
-            body.statements.add(insertPos, onCompositionStatement)
+            if (!injectedInNonSkipBranch) {
+                val insertPos = if (enterCall != null) 1 else 0
+                body.statements.add(insertPos, trackCall)
+            }
         }
 
         return function
+    }
+
+    /**
+     * Find Compose's skip-check `when` expression in the IR body and inject
+     * onComposition as the first statement of the non-skip branch.
+     *
+     * The Compose compiler generates a `when` (if/else) where one branch calls
+     * `skipToGroupEnd()` (the skip path) and the other contains the actual body
+     * (the non-skip path). We inject into the non-skip branch.
+     *
+     * Returns true if injection was successful.
+     */
+    private fun injectInComposeNonSkipBranch(
+        body: IrBlockBody,
+        onCompositionCall: IrStatement
+    ): Boolean {
+        // Walk all statements recursively to find the when expression with skipToGroupEnd
+        for (statement in body.statements) {
+            if (injectInWhenRecursive(statement, onCompositionCall)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Recursively search for a `when` expression that contains a branch calling
+     * `skipToGroupEnd()` and inject onComposition in the OTHER branch.
+     */
+    private fun injectInWhenRecursive(
+        element: org.jetbrains.kotlin.ir.IrElement,
+        onCompositionCall: IrStatement
+    ): Boolean {
+        if (element is IrWhen) {
+            // Check if any branch contains skipToGroupEnd
+            var skipBranchIndex = -1
+            for (i in element.branches.indices) {
+                if (containsCall(element.branches[i].result, "skipToGroupEnd")) {
+                    skipBranchIndex = i
+                    break
+                }
+            }
+            if (skipBranchIndex >= 0) {
+                // Found the skip check! Inject onComposition in the non-skip branch.
+                for (i in element.branches.indices) {
+                    if (i != skipBranchIndex) {
+                        val nonSkipBranch = element.branches[i]
+                        prependToBlock(nonSkipBranch, onCompositionCall)
+                        return true
+                    }
+                }
+            }
+        }
+
+        // Recurse into child elements
+        when (element) {
+            is IrBlock -> {
+                for (stmt in element.statements) {
+                    if (injectInWhenRecursive(stmt, onCompositionCall)) return true
+                }
+            }
+            is IrWhen -> {
+                for (branch in element.branches) {
+                    if (injectInWhenRecursive(branch.result, onCompositionCall)) return true
+                }
+            }
+        }
+        return false
+    }
+
+    /** Prepend a statement to the beginning of a branch's result block. */
+    private fun prependToBlock(branch: IrBranch, statement: IrStatement) {
+        val result = branch.result
+        if (result is IrBlock) {
+            (result.statements as MutableList<IrStatement>).add(0, statement)
+        } else {
+            // Wrap in a block
+            branch.result = IrBlockImpl(
+                result.startOffset, result.endOffset,
+                result.type, null,
+                listOf(statement, result)
+            )
+        }
+    }
+
+    /** Check if an IR element contains a call to a function with the given name. */
+    private fun containsCall(element: org.jetbrains.kotlin.ir.IrElement, functionName: String): Boolean {
+        var found = false
+        element.accept(object : IrElementTransformerVoid() {
+            override fun visitCall(expression: IrCall): IrExpression {
+                if (expression.symbol.owner.name.asString() == functionName) {
+                    found = true
+                }
+                return super.visitCall(expression)
+            }
+        }, null)
+        return found
     }
 
     /**
@@ -306,6 +403,89 @@ class ReboundIrTransformer(
             type = pluginContext.irBuiltIns.stringType,
             arguments = arguments
         )
+    }
+
+    /**
+     * Build a human-readable key for composable functions.
+     * Named functions → FQN as-is.
+     * Anonymous lambdas → named after the primary composable call inside them,
+     * e.g. "com.example.HomeScreen.Scaffold{}" instead of "<anonymous>".
+     */
+    private fun resolveComposableKey(function: IrFunction): String {
+        val raw = function.kotlinFqName.asString()
+        if (!raw.contains("<anonymous>")) return raw
+
+        val pkg = extractPackage(raw)
+        val parentName = findEnclosingName(function)
+
+        // Try to name after the first user-visible composable call in the body
+        val primaryCall = findPrimaryComposableCall(function)
+        if (primaryCall != null) {
+            return "$pkg$parentName.$primaryCall{}"
+        }
+
+        // Fallback: counter-based λN
+        val counterKey = "$pkg$parentName"
+        val idx = lambdaCounters.getOrPut(counterKey) { 0 } + 1
+        lambdaCounters[counterKey] = idx
+        return "$pkg$parentName.λ$idx"
+    }
+
+    /**
+     * Scan the function body for the first composable call that isn't a
+     * Compose runtime internal (startRestartGroup, skipToGroupEnd, etc.).
+     */
+    private fun findPrimaryComposableCall(function: IrFunction): String? {
+        val body = function.body as? IrBlockBody ?: return null
+        var firstCall: String? = null
+        body.accept(object : IrElementTransformerVoid() {
+            override fun visitCall(expression: IrCall): IrExpression {
+                if (firstCall == null) {
+                    val callee = expression.symbol.owner
+                    val name = callee.name.asString()
+                    if (callee.hasAnnotation(composableAnnotation) &&
+                        !name.startsWith("\$") &&
+                        !name.startsWith("<get-") &&
+                        !name.startsWith("<set-") &&
+                        name !in composeInternalCalls
+                    ) {
+                        firstCall = name
+                    }
+                }
+                return super.visitCall(expression)
+            }
+        }, null)
+        return firstCall
+    }
+
+    private fun findEnclosingName(function: IrFunction): String {
+        var current: IrDeclarationParent? = (function as? IrDeclaration)?.parent
+        while (current != null) {
+            when (current) {
+                is IrFunction -> {
+                    val name = current.name.asString()
+                    if (name != "<anonymous>" && !name.startsWith("lambda-")) {
+                        return name
+                    }
+                    current = (current as? IrDeclaration)?.parent
+                }
+                is IrClass -> {
+                    val name = current.name.asString()
+                    if (!name.startsWith("ComposableSingletons")) {
+                        return name
+                    }
+                    current = (current as? IrDeclaration)?.parent
+                }
+                else -> break
+            }
+        }
+        return "lambda"
+    }
+
+    private fun extractPackage(fqName: String): String {
+        val parts = fqName.split(".")
+        val classIdx = parts.indexOfFirst { it[0].isUpperCase() || it.contains("$") || it == "<anonymous>" }
+        return if (classIdx > 0) parts.subList(0, classIdx).joinToString(".") + "." else ""
     }
 
     // Infer budget class from IR structure using heuristics:
@@ -374,7 +554,7 @@ class ReboundIrTransformer(
         val names = mutableSetOf<String>()
         val composableFlags = mutableSetOf<String>()
         body.accept(object : IrElementTransformerVoid() {
-            override fun visitCall(expression: IrCall): org.jetbrains.kotlin.ir.expressions.IrExpression {
+            override fun visitCall(expression: IrCall): IrExpression {
                 val callee = expression.symbol.owner
                 val name = callee.name.asString()
                 names.add(name)
@@ -390,7 +570,7 @@ class ReboundIrTransformer(
     private fun hasComposableChildren(body: IrBlockBody): Boolean {
         var found = false
         body.accept(object : IrElementTransformerVoid() {
-            override fun visitCall(expression: IrCall): org.jetbrains.kotlin.ir.expressions.IrExpression {
+            override fun visitCall(expression: IrCall): IrExpression {
                 if (expression.symbol.owner.hasAnnotation(composableAnnotation)) {
                     found = true
                 }

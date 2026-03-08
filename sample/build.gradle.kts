@@ -8,14 +8,32 @@ plugins {
 
 android {
     namespace = "io.aldefy.rebound.sample"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.aldefy.rebound.sample"
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        animationsDisabled = true
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            matchingFallbacks += listOf("release")
+        }
     }
 
     compileOptions {
@@ -30,6 +48,12 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.foundation)
     implementation(compose.ui)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
 
 rebound {
