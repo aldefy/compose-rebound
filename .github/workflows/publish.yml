@@ -1,88 +1,114 @@
-name: Publish Release
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - "[0-9]+.[0-9]+.[0-9]+*"   # e.g. 0.1.0, 0.2.0-beta01
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dkotlin.incremental=false
+
+permissions:
+  contents: write
 
 jobs:
-  publish-maven-central:
+  build:
     runs-on: macos-latest
+    timeout-minutes: 45
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: temurin
           java-version: 17
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Kotlin/Native compiler
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
 
       - name: Import GPG key
-        run: echo "${{ secrets.GPG_KEY }}" | gpg --batch --import
-        env:
-          GPG_KEY: ${{ secrets.GPG_KEY }}
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Publish main modules to Maven Central
-        run: ./gradlew publishAllPublicationsToSonatypeRepository
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      # Main modules: runtime, compiler, gradle plugin
+      - name: Publish main modules to local staging
+        run: |
+          ./gradlew publishAllPublicationsToLocalStagingRepository \
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Publish compiler-k2 to Maven Central
+      # Compiler plugin for Kotlin 2.2.x (separate composite build)
+      - name: Publish compiler-k2 to local staging
         working-directory: rebound-compiler-k2
-        run: ./gradlew publishAllPublicationsToSonatypeRepository
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          ./gradlew publishAllPublicationsToLocalStagingRepository \
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Publish compiler-k2-3 to Maven Central
+      # Compiler plugin for Kotlin 2.3.x (separate composite build)
+      - name: Publish compiler-k2-3 to local staging
         working-directory: rebound-compiler-k2-3
-        run: ./gradlew publishAllPublicationsToSonatypeRepository
+        run: |
+          ./gradlew publishAllPublicationsToLocalStagingRepository \
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Verify publications
+        run: |
+          echo "=== Main modules ==="
+          find rebound-compiler/build/staging-deploy rebound-runtime/build/staging-deploy rebound-gradle/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
+          echo "=== Compiler K2 ==="
+          find rebound-compiler-k2/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
+          echo "=== Compiler K2-3 ==="
+          find rebound-compiler-k2-3/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
+
+      - name: Create bundle zip
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          mkdir -p bundle
+
+          # Merge all staging-deploy directories
+          for dir in rebound-compiler rebound-runtime rebound-gradle; do
+            if [ -d "$dir/build/staging-deploy/io" ]; then
+              rsync -a "$dir/build/staging-deploy/io/" bundle/io/
+            fi
+          done
+          rsync -a rebound-compiler-k2/build/staging-deploy/io/ bundle/io/
+          rsync -a rebound-compiler-k2-3/build/staging-deploy/io/ bundle/io/
+
+          cd bundle
+          zip -r "$GITHUB_WORKSPACE/rebound-${TAG}-bundle.zip" io/
+
+      - name: Build IDE plugin
+        run: ./gradlew :rebound-ide:buildPlugin
+
+      - name: Create GitHub release
         env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          IDE_ZIP=$(find rebound-ide/build/distributions -name "*.zip" | head -1)
 
-  publish-gradle-plugin-portal:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Publish to Gradle Plugin Portal
-        run: ./gradlew :rebound-gradle:publishPlugins
-        env:
-          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
-          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
-
-  publish-ide-plugin:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build and publish IDE plugin
-        run: ./gradlew :rebound-ide:publishPlugin
-        env:
-          JETBRAINS_MARKETPLACE_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+          gh release create "$TAG" \
+            "rebound-${TAG}-bundle.zip" \
+            "$IDE_ZIP" \
+            --title "Rebound $TAG" \
+            --generate-notes \
+            --latest

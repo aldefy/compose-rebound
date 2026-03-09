@@ -63,16 +63,12 @@ configure<PublishingExtension> {
     }
 }
 
-val isRelease = !version.toString().endsWith("-SNAPSHOT")
-
 configure<SigningExtension> {
     useGpgCmd()
     sign(the<PublishingExtension>().publications)
-    // Only require signing for non-SNAPSHOT releases (CI / Maven Central uploads)
-    isRequired = isRelease
 }
 
-// Disable signing tasks when not required (local dev / SNAPSHOT builds)
+// Only sign when GPG key is explicitly provided: -Psigning.gnupg.keyName=8EC63504
 tasks.withType<Sign>().configureEach {
-    onlyIf { isRelease }
+    onlyIf { project.hasProperty("signing.gnupg.keyName") }
 }
