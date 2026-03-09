@@ -1,8 +1,11 @@
 # Rebound
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.x%E2%80%932.2.x-purple.svg)](https://kotlinlang.org)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20JVM%20%7C%20iOS%20%7C%20Wasm-green.svg)](https://kotlinlang.org/docs/multiplatform.html)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.x%E2%80%932.2.x-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4.svg?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Gradle Plugin](https://img.shields.io/badge/Gradle%20Plugin-02303A.svg?logo=gradle&logoColor=white)](https://plugins.gradle.org)
+[![IntelliJ](https://img.shields.io/badge/IDE%20Plugin-000000.svg?logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com)
 
 **Compose recomposition budget monitor** — catch runaway recompositions before they ship.
 
@@ -67,11 +70,13 @@ Connect the IDE plugin or CLI for richer output.
 
 The compiler plugin injects `ReboundTracker.onCompositionEnter/Exit` calls into every `@Composable` function at the IR level. The runtime tracks rates per sliding window and reports violations. The IDE plugin and CLI connect via `LocalServerSocket("rebound")` forwarded through ADB.
 
+> **Platform note:** While the compiler plugin instruments all KMP targets (Android, JVM, iOS), the socket transport and state observer are currently **Android-only**. On non-Android targets, metrics are collected in memory but there is no transport to export them. iOS/Desktop support is on the roadmap.
+
 ## Modules
 
 | Module | Description |
 |--------|-------------|
-| `rebound-runtime` | KMP runtime — Android, JVM, iOS (arm64, x64, simulatorArm64) |
+| `rebound-runtime` | Runtime library (Android). Compiles for JVM/iOS but transport is Android-only. |
 | `rebound-compiler` | Kotlin compiler plugin for Kotlin 2.0.x-2.1.x |
 | `rebound-compiler-k2` | Kotlin compiler plugin for Kotlin 2.2+ |
 | `rebound-gradle` | Gradle plugin — auto-wires compiler + runtime, selects correct artifact |
@@ -228,20 +233,22 @@ Or query directly:
 echo "snapshot" | nc localhost 18462
 ```
 
-## Kotlin Version Support
+## Kotlin Compatibility
 
-The Gradle plugin auto-selects the correct compiler artifact:
+| Kotlin Version | Compiler Artifact | Status |
+|---------------|-------------------|--------|
+| 2.0.x | `rebound-compiler` | Stable |
+| 2.1.x | `rebound-compiler` | Stable |
+| 2.2.x | `rebound-compiler-kotlin-2.2` | Stable |
+| 2.3.x | `rebound-compiler-kotlin-2.3` | Stable |
 
-| Kotlin Version | Compiler Artifact |
-|---------------|-------------------|
-| 2.0.x | `rebound-compiler` |
-| 2.1.x | `rebound-compiler` |
-| 2.2.x+ | `rebound-compiler-kotlin-2.2` |
+The Gradle plugin auto-detects your project's Kotlin version and selects the correct compiler artifact. No manual configuration needed.
 
-No manual configuration needed.
+**Why multiple artifacts?** Kotlin's compiler plugin IR API changes between minor versions. Each artifact is compiled against the matching `kotlin-compiler-embeddable` to ensure binary compatibility.
 
 ## Roadmap
 
+- [ ] **iOS/Desktop transport** — TCP socket server in `iosMain`/`jvmMain` via `ktor-network` for true KMP support
 - [ ] CI budget gates — fail builds when recomposition budgets regress
 - [ ] Flame chart mode in Timeline tab
 - [ ] JetBrains Marketplace publication
