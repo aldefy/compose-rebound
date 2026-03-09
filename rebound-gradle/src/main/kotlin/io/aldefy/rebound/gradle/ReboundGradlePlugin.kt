@@ -88,7 +88,7 @@ class ReboundGradlePlugin : Plugin<Project> {
             // Pass plugin options to the compiler
             target.tasks.withType(KotlinCompilationTask::class.java).configureEach {
                 it.compilerOptions.freeCompilerArgs.addAll(
-                    "-P", "plugin:io.github.aldefy.rebound:enabled=${extension.enabled.get()}"
+                    "-P", "plugin:io.aldefy.rebound:enabled=${extension.enabled.get()}"
                 )
             }
         }
