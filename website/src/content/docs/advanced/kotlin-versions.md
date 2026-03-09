@@ -59,7 +59,7 @@ In rare cases where auto-detection fails (e.g., custom Kotlin distributions), yo
 
 ```kotlin title="build.gradle.kts"
 dependencies {
-    kotlinCompilerPluginClasspath("io.aldefy:rebound-compiler-kotlin-2.2:0.1.0-SNAPSHOT")
+    kotlinCompilerPluginClasspath("io.aldefy:rebound-compiler-kotlin-2.2:0.1.0")
 }
 ```
 
@@ -67,7 +67,7 @@ This bypasses the Gradle plugin's auto-selection. You must also add the runtime 
 
 ```kotlin
 dependencies {
-    debugImplementation("io.aldefy:rebound-runtime:0.1.0-SNAPSHOT")
+    debugImplementation("io.aldefy:rebound-runtime:0.1.0")
 }
 ```
 

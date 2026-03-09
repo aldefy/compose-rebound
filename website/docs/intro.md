@@ -15,7 +15,7 @@ Three lines in your build file:
 
 ```kotlin title="build.gradle.kts"
 plugins {
-    id("io.aldefy.rebound") version "0.1.0-SNAPSHOT"
+    id("io.aldefy.rebound") version "0.1.0"
 }
 ```
 

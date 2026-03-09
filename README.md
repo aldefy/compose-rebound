@@ -42,7 +42,7 @@ pluginManagement {
 ```kotlin
 // build.gradle.kts (app module)
 plugins {
-    id("io.aldefy.rebound") version "0.1.0-SNAPSHOT"
+    id("io.aldefy.rebound") version "0.1.0"
 }
 ```
 
@@ -290,106 +290,13 @@ See [roadmap.md](roadmap.md) for the full iOS roadmap.
 
 ## AI Agent Skill
 
-Make your AI coding tool understand Compose recomposition performance. The `rebound-skill/` directory contains markdown-based instructions that any AI assistant can consume.
+Make your AI coding tool understand Compose recomposition performance. The **[rebound-skill](https://github.com/aldefy/rebound-skill)** repo contains markdown-based instructions that any AI assistant can consume.
 
 **What it covers:** Budget classes, violation diagnosis, skip rate analysis, stability optimization, CLI usage, IDE plugin workflow — all backed by the actual Rebound codebase.
 
-### Claude Code
+**Supports:** Claude Code, Gemini CLI, Gemini (Android Studio), Cursor, Copilot, Codex, Windsurf, Amazon Q, and any markdown-consuming AI tool.
 
-```bash
-# Personal skill (all projects)
-mkdir -p ~/.claude/skills
-cp -r rebound-skill ~/.claude/skills/
-
-# Project-specific
-mkdir -p .claude/skills
-cp -r rebound-skill .claude/skills/
-```
-
-Claude Code discovers `SKILL.md` automatically and triggers on keywords like recomposition, budget, violation, skip rate, jank.
-
-### Gemini CLI
-
-Add to `GEMINI.md` in your project root:
-
-```markdown
-## Rebound Recomposition Monitor
-For all Compose recomposition performance tasks, follow the workflow in
-`rebound-skill/SKILL.md` and consult reference files in `rebound-skill/references/`.
-```
-
-### Cursor
-
-Create `.cursor/rules/rebound-skill.mdc`:
-
-```markdown
----
-description: Rebound recomposition budget monitor guidance
-globs: **/*.kt
----
-
-Follow the instructions in `rebound-skill/SKILL.md` for all Compose recomposition
-performance work. Consult `rebound-skill/references/` before suggesting fixes.
-```
-
-### GitHub Copilot
-
-Add to `.github/copilot-instructions.md`:
-
-```markdown
-## Rebound
-For Compose recomposition performance work, follow `rebound-skill/SKILL.md`
-and consult `rebound-skill/references/` for budget classes, violation patterns,
-skip rate analysis, and fix strategies.
-```
-
-### Codex CLI (OpenAI)
-
-Add to `AGENTS.md` in your project root:
-
-```markdown
-## Rebound
-For all Compose recomposition performance tasks, follow the instructions in
-`rebound-skill/SKILL.md` and consult `rebound-skill/references/` before answering.
-```
-
-### Windsurf
-
-Create `.windsurf/rules/rebound-skill.md`:
-
-```markdown
-For all Compose recomposition performance tasks, follow the workflow in
-`rebound-skill/SKILL.md` and consult `rebound-skill/references/` before answering.
-```
-
-### Amazon Q Developer
-
-Add to `.amazonq/rules/rebound.md`:
-
-```markdown
-For all Compose recomposition performance tasks, follow the workflow in
-`rebound-skill/SKILL.md` and consult `rebound-skill/references/` before answering.
-```
-
-### Gemini (Google AI Studio / Android Studio)
-
-Add to your project's `GEMINI.md` or system instructions:
-
-```markdown
-## Rebound Recomposition Monitor
-For Compose performance analysis, follow `rebound-skill/SKILL.md`.
-Consult references in `rebound-skill/references/` for:
-- Budget classes → `references/budget-classes.md`
-- Violation diagnosis → `references/diagnosing-violations.md`
-- Skip rate & stability → `references/skip-rate-stability.md`
-- CLI usage → `references/cli-usage.md`
-- IDE plugin → `references/ide-plugin.md`
-- Setup → `references/setup-guide.md`
-```
-
-### Any other AI coding tool
-
-It's just markdown. Clone or copy `rebound-skill/` into your project, then point your tool's instruction file at `rebound-skill/SKILL.md`.
+See [aldefy/rebound-skill](https://github.com/aldefy/rebound-skill) for setup instructions.
 
 ## Documentation
 

@@ -43,7 +43,7 @@ class ReboundGradlePlugin : Plugin<Project> {
                 }
                 target.dependencies.project(mapOf("path" to projectPath))
             } catch (_: Exception) {
-                target.dependencies.create("io.aldefy.rebound:$compilerArtifactId:0.1.0-SNAPSHOT")
+                target.dependencies.create("io.aldefy.rebound:$compilerArtifactId:0.1.0")
             }
 
             val configs = target.configurations
@@ -70,7 +70,7 @@ class ReboundGradlePlugin : Plugin<Project> {
 
             // Auto-add runtime dependency
             // For KMP projects, add to commonMainImplementation; for Android-only, use debugImplementation
-            val runtimeDep = target.dependencies.create("io.aldefy.rebound:rebound-runtime:0.1.0-SNAPSHOT")
+            val runtimeDep = target.dependencies.create("io.aldefy.rebound:rebound-runtime:0.1.0")
             val isKmp = target.extensions.findByName("kotlin")?.javaClass?.name
                 ?.contains("KotlinMultiplatformExtension") == true
             val runtimeConfig = if (isKmp) {

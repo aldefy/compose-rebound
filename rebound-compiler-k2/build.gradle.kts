@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.2.20"
 }
 
-val reboundVersion = "0.1.0-SNAPSHOT"
+val reboundVersion = "0.1.0"
 val reboundGroup = "io.aldefy.rebound"
 
 group = reboundGroup
@@ -22,7 +22,7 @@ sourceSets.main {
     resources.srcDir(rootProject.file("../rebound-compiler/src/main/resources"))
 }
 
-apply(plugin = "maven-publish")
+apply(from = rootProject.file("../gradle/publish-convention.gradle.kts"))
 
 configure<PublishingExtension> {
     publications {

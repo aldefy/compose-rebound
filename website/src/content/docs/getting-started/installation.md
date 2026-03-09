@@ -32,7 +32,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.aldefy.rebound") version "0.1.0-SNAPSHOT"
+    id("io.aldefy.rebound") version "0.1.0"
 }
 ```
 

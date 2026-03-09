@@ -1,16 +1,37 @@
 <idea-plugin>
     <id>io.aldefy.rebound.ide</id>
     <name>Rebound</name>
-    <vendor url="https://github.com/nickaldenfy/compose-rebound">aldefy</vendor>
+    <vendor url="https://github.com/aldefy/compose-rebound">aldefy</vendor>
 
     <description><![CDATA[
-    Live recomposition budget monitor for Jetpack Compose.
-    Parses Rebound logcat output and displays composable recomposition rates, budgets, and violations in a tool window.
+    <p>Catch runaway recompositions before they ship. Rebound assigns each <code>@Composable</code> a recomposition rate budget based on its role (Screen, Container, Interactive, List Item, Animated, Leaf) and alerts when the budget is exceeded.</p>
+
+    <h3>5-Tab Performance Cockpit</h3>
+    <ul>
+        <li><b>Monitor</b> — Live composable tree with sparkline rate history per node. Scrolling event log shows recomposition events, violations, and state changes in real time.</li>
+        <li><b>Hot Spots</b> — Sortable flat table of all tracked composables ranked by severity (OVER > NEAR > OK). Summary card shows violation/warning/OK counts. Click any row to jump to source.</li>
+        <li><b>Timeline</b> — Composable x time heatmap. Each cell colored green/yellow/red based on budget status. Scroll back up to 60 minutes. Correlate recomposition spikes with user interactions.</li>
+        <li><b>Stability</b> — Parameter stability matrix showing SAME/DIFFERENT/STATIC/UNCERTAIN per parameter. Cascade impact tree visualizes how unstable parameters propagate recompositions through the hierarchy.</li>
+        <li><b>History</b> — Saved sessions with VCS-tagged branch name and commit hash. Side-by-side comparison for before/after regression analysis.</li>
+    </ul>
+
+    <h3>Editor Integration</h3>
+    <ul>
+        <li><b>Gutter icons</b> — Red, yellow, or green dots next to @Composable declarations reflecting live budget status.</li>
+        <li><b>CodeVision</b> — Inline hints above each composable: 12/s | budget: 8/s | OVER | skip: 45%</li>
+        <li><b>Status bar</b> — Persistent widget: Rebound: 45 composables | 3 violations</li>
+    </ul>
+
+    <p>Works with Kotlin 2.0.x-2.3.x, Android and iOS (Compose Multiplatform). Zero config — just apply the Gradle plugin.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="rebound-git.xml">Git4Idea</depends>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true" supportsK1="true"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="io.aldefy.rebound.ide.data.ReboundSettings"/>
