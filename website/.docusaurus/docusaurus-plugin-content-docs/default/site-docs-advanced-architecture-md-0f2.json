@@ -1,0 +1,28 @@
+{
+  "id": "advanced/architecture",
+  "title": "Architecture",
+  "description": "Rebound consists of five modules that span compile time, runtime, and developer tooling.",
+  "source": "@site/docs/advanced/architecture.md",
+  "sourceDirName": "advanced",
+  "slug": "/advanced/architecture",
+  "permalink": "/compose-rebound/docs/advanced/architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/advanced/architecture.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "Architecture"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Commands",
+    "permalink": "/compose-rebound/docs/cli/commands"
+  },
+  "next": {
+    "title": "Custom Budgets",
+    "permalink": "/compose-rebound/docs/advanced/custom-budgets"
+  }
+}

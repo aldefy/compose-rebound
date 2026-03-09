@@ -1,0 +1,28 @@
+{
+  "id": "cli/commands",
+  "title": "Commands",
+  "description": "All commands are run via the rebound-cli.sh script from the repository root.",
+  "source": "@site/docs/cli/commands.md",
+  "sourceDirName": "cli",
+  "slug": "/cli/commands",
+  "permalink": "/compose-rebound/docs/cli/commands",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/cli/commands.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "Commands"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Setup",
+    "permalink": "/compose-rebound/docs/cli/setup"
+  },
+  "next": {
+    "title": "Architecture",
+    "permalink": "/compose-rebound/docs/advanced/architecture"
+  }
+}

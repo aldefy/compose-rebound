@@ -1,0 +1,16 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+const base = import.meta.env.BASE_URL;
+---
+<nav class="sticky top-0 z-50 border-b border-slate-200 dark:border-brand-dark-border bg-white/80 dark:bg-brand-dark/80 backdrop-blur-sm">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <a href={base} class="text-xl font-bold text-slate-900 dark:text-white">Rebound</a>
+    <div class="flex items-center gap-6">
+      <a href={`${base}#features`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Features</a>
+      <a href={`${base}#platforms`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Platforms</a>
+      <a href={`${base}#get-started`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Get Started</a>
+      <a href="https://github.com/aldefy/compose-rebound" target="_blank" class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">GitHub</a>
+      <ThemeToggle />
+    </div>
+  </div>
+</nav>

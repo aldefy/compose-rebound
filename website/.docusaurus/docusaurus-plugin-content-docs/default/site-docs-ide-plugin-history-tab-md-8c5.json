@@ -1,0 +1,28 @@
+{
+  "id": "ide-plugin/history-tab",
+  "title": "History Tab",
+  "description": "The History tab enables session persistence, VCS-correlated comparison, and regression detection across code changes.",
+  "source": "@site/docs/ide-plugin/history-tab.md",
+  "sourceDirName": "ide-plugin",
+  "slug": "/ide-plugin/history-tab",
+  "permalink": "/compose-rebound/docs/ide-plugin/history-tab",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/ide-plugin/history-tab.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "History Tab"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Stability Tab",
+    "permalink": "/compose-rebound/docs/ide-plugin/stability-tab"
+  },
+  "next": {
+    "title": "Editor Integration",
+    "permalink": "/compose-rebound/docs/ide-plugin/editor-integration"
+  }
+}

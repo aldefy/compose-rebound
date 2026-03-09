@@ -1,0 +1,28 @@
+{
+  "id": "concepts/dynamic-scaling",
+  "title": "Dynamic Scaling",
+  "description": "Rebound dynamically adjusts budget thresholds based on the current interaction state. A composable that would violate its budget during idle may be perfectly acceptable during a fast scroll or animation.",
+  "source": "@site/docs/concepts/dynamic-scaling.md",
+  "sourceDirName": "concepts",
+  "slug": "/concepts/dynamic-scaling",
+  "permalink": "/compose-rebound/docs/concepts/dynamic-scaling",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/concepts/dynamic-scaling.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "Dynamic Scaling"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "$changed Bitmask",
+    "permalink": "/compose-rebound/docs/concepts/changed-mask"
+  },
+  "next": {
+    "title": "Installation",
+    "permalink": "/compose-rebound/docs/ide-plugin/installation"
+  }
+}

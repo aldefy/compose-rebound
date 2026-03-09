@@ -1,0 +1,28 @@
+{
+  "id": "guides/debugging-recompositions",
+  "title": "Debugging Recompositions",
+  "description": "This guide walks through a complete debugging workflow using Rebound, from noticing a problem to shipping a fix.",
+  "source": "@site/docs/guides/debugging-recompositions.md",
+  "sourceDirName": "guides",
+  "slug": "/guides/debugging-recompositions",
+  "permalink": "/compose-rebound/docs/guides/debugging-recompositions",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/guides/debugging-recompositions.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "Debugging Recompositions"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Kotlin Version Support",
+    "permalink": "/compose-rebound/docs/advanced/kotlin-versions"
+  },
+  "next": {
+    "title": "Fixing Violations",
+    "permalink": "/compose-rebound/docs/guides/fixing-violations"
+  }
+}

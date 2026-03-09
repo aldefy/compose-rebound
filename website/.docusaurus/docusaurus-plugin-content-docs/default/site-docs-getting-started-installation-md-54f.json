@@ -1,0 +1,28 @@
+{
+  "id": "getting-started/installation",
+  "title": "Installation",
+  "description": "Gradle Plugin Setup",
+  "source": "@site/docs/getting-started/installation.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/installation",
+  "permalink": "/compose-rebound/docs/getting-started/installation",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/getting-started/installation.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "Installation"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Introduction",
+    "permalink": "/compose-rebound/docs/intro"
+  },
+  "next": {
+    "title": "Configuration",
+    "permalink": "/compose-rebound/docs/getting-started/configuration"
+  }
+}

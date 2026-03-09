@@ -1,0 +1,28 @@
+{
+  "id": "guides/ci-integration",
+  "title": "CI Integration",
+  "description": "CI budget gates are on the Rebound roadmap. This page describes the planned approach and how it will work. The implementation is not yet available.",
+  "source": "@site/docs/guides/ci-integration.md",
+  "sourceDirName": "guides",
+  "slug": "/guides/ci-integration",
+  "permalink": "/compose-rebound/docs/guides/ci-integration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/guides/ci-integration.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "CI Integration"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Fixing Violations",
+    "permalink": "/compose-rebound/docs/guides/fixing-violations"
+  },
+  "next": {
+    "title": "Roadmap",
+    "permalink": "/compose-rebound/docs/roadmap"
+  }
+}

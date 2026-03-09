@@ -1,0 +1,28 @@
+{
+  "id": "getting-started/configuration",
+  "title": "Configuration",
+  "description": "Gradle Extension",
+  "source": "@site/docs/getting-started/configuration.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/configuration",
+  "permalink": "/compose-rebound/docs/getting-started/configuration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/getting-started/configuration.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "Configuration"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Installation",
+    "permalink": "/compose-rebound/docs/getting-started/installation"
+  },
+  "next": {
+    "title": "First Run",
+    "permalink": "/compose-rebound/docs/getting-started/first-run"
+  }
+}

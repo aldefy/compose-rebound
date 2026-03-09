@@ -1,0 +1,28 @@
+{
+  "id": "ide-plugin/monitor-tab",
+  "title": "Monitor Tab",
+  "description": "The Monitor tab is the primary view in the Rebound tool window. It shows a live composable hierarchy with real-time metrics.",
+  "source": "@site/docs/ide-plugin/monitor-tab.md",
+  "sourceDirName": "ide-plugin",
+  "slug": "/ide-plugin/monitor-tab",
+  "permalink": "/compose-rebound/docs/ide-plugin/monitor-tab",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/ide-plugin/monitor-tab.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "Monitor Tab"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Installation",
+    "permalink": "/compose-rebound/docs/ide-plugin/installation"
+  },
+  "next": {
+    "title": "Hot Spots Tab",
+    "permalink": "/compose-rebound/docs/ide-plugin/hotspots-tab"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "ide-plugin/timeline-tab",
+  "title": "Timeline Tab",
+  "description": "The Timeline tab displays a composable-by-time heatmap, showing recomposition patterns over time. It reveals temporal patterns that point-in-time snapshots cannot: sustained hotspots, burst patterns, and correlation between composables.",
+  "source": "@site/docs/ide-plugin/timeline-tab.md",
+  "sourceDirName": "ide-plugin",
+  "slug": "/ide-plugin/timeline-tab",
+  "permalink": "/compose-rebound/docs/ide-plugin/timeline-tab",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/ide-plugin/timeline-tab.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "Timeline Tab"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Hot Spots Tab",
+    "permalink": "/compose-rebound/docs/ide-plugin/hotspots-tab"
+  },
+  "next": {
+    "title": "Stability Tab",
+    "permalink": "/compose-rebound/docs/ide-plugin/stability-tab"
+  }
+}

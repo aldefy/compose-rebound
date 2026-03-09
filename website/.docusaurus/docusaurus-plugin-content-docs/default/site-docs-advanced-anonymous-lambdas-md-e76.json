@@ -1,0 +1,28 @@
+{
+  "id": "advanced/anonymous-lambdas",
+  "title": "Anonymous Lambda Resolution",
+  "description": "Compose uses lambdas extensively. Scaffold, NavHost, Column, Row, LazyColumn -- all take @Composable lambda parameters. Each lambda is a composable function that Rebound instruments. Without name resolution, the composable tree is 80% ``.",
+  "source": "@site/docs/advanced/anonymous-lambdas.md",
+  "sourceDirName": "advanced",
+  "slug": "/advanced/anonymous-lambdas",
+  "permalink": "/compose-rebound/docs/advanced/anonymous-lambdas",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/advanced/anonymous-lambdas.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "Anonymous Lambda Resolution"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Custom Budgets",
+    "permalink": "/compose-rebound/docs/advanced/custom-budgets"
+  },
+  "next": {
+    "title": "KMP Support",
+    "permalink": "/compose-rebound/docs/advanced/kmp-support"
+  }
+}

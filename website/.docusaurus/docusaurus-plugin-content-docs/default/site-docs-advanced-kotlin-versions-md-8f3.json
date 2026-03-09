@@ -1,0 +1,28 @@
+{
+  "id": "advanced/kotlin-versions",
+  "title": "Kotlin Version Support",
+  "description": "Rebound supports Kotlin 2.0.x through 2.2.x and beyond. The Gradle plugin automatically selects the correct compiler artifact based on your project's Kotlin version.",
+  "source": "@site/docs/advanced/kotlin-versions.md",
+  "sourceDirName": "advanced",
+  "slug": "/advanced/kotlin-versions",
+  "permalink": "/compose-rebound/docs/advanced/kotlin-versions",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/advanced/kotlin-versions.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "Kotlin Version Support"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "KMP Support",
+    "permalink": "/compose-rebound/docs/advanced/kmp-support"
+  },
+  "next": {
+    "title": "Debugging Recompositions",
+    "permalink": "/compose-rebound/docs/guides/debugging-recompositions"
+  }
+}

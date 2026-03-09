@@ -1,0 +1,28 @@
+{
+  "id": "getting-started/first-run",
+  "title": "First Run",
+  "description": "After adding the Rebound Gradle plugin, here is how to see it in action.",
+  "source": "@site/docs/getting-started/first-run.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/first-run",
+  "permalink": "/compose-rebound/docs/getting-started/first-run",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/aldefy/compose-rebound/tree/main/website/docs/getting-started/first-run.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "First Run"
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Configuration",
+    "permalink": "/compose-rebound/docs/getting-started/configuration"
+  },
+  "next": {
+    "title": "Budget Classes",
+    "permalink": "/compose-rebound/docs/concepts/budget-classes"
+  }
+}
