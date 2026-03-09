@@ -12,3 +12,4 @@ dist/
 .env
 .env.*
 npm-debug.log*
+website/.docusaurus/
