@@ -87,7 +87,7 @@ if ! connect; then
     echo "No connection — is the app running with Rebound enabled?" >&2
     echo "  Android: connect device/emulator, launch debug app" >&2
     echo "  iOS simulator: launch app in simulator" >&2
-    echo "  iOS device: connect via USB, launch app (uses devicectl console)" >&2
+    echo "  iOS device: start 'rebound-relay' first, or use devicectl console" >&2
     exit 1
 fi
 

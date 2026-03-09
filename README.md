@@ -1,15 +1,16 @@
 # Rebound
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.x%E2%80%932.2.x-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.x%E2%80%932.3.x-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![iOS](https://img.shields.io/badge/Platform-iOS-000000.svg?logo=apple&logoColor=white)](https://developer.apple.com)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4.svg?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Gradle Plugin](https://img.shields.io/badge/Gradle%20Plugin-02303A.svg?logo=gradle&logoColor=white)](https://plugins.gradle.org)
 [![IntelliJ](https://img.shields.io/badge/IDE%20Plugin-000000.svg?logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com)
 
 **Compose recomposition budget monitor** — catch runaway recompositions before they ship.
 
-Rebound is a Kotlin compiler plugin that instruments every `@Composable` function with lightweight tracking calls. At runtime, it monitors recomposition rates against per-composable budgets, detects violations, and reports them via an Android Studio tool window, CLI, or logcat. Zero config required — just apply the Gradle plugin. The IDE plugin provides a 5-tab performance cockpit with live monitoring, hot spots ranking, timeline heatmap, stability analysis, and session history with VCS correlation.
+Rebound is a Kotlin compiler plugin that instruments every `@Composable` function with lightweight tracking calls. At runtime, it monitors recomposition rates against per-composable budgets, detects violations, and reports them via an Android Studio tool window, CLI, or logcat. Works on Android and iOS (Compose Multiplatform). Zero config required — just apply the Gradle plugin. The IDE plugin provides a 5-tab performance cockpit with live monitoring, hot spots ranking, timeline heatmap, stability analysis, and session history with VCS correlation.
 
 ## Features
 
@@ -68,19 +69,20 @@ Connect the IDE plugin or CLI for richer output.
 
 ![Rebound architecture — compile time to runtime to IDE](assets/diagrams/03-rebound-architecture.svg)
 
-The compiler plugin injects `ReboundTracker.onCompositionEnter/Exit` calls into every `@Composable` function at the IR level. The runtime tracks rates per sliding window and reports violations. The IDE plugin and CLI connect via `LocalServerSocket("rebound")` forwarded through ADB.
+The compiler plugin injects `ReboundTracker.onCompositionEnter/Exit` calls into every `@Composable` function at the IR level. The runtime tracks rates per sliding window and reports violations. The IDE plugin and CLI connect via `LocalServerSocket("rebound")` forwarded through ADB (Android) or via a WebSocket relay (iOS physical devices).
 
-> **Platform note:** While the compiler plugin instruments all KMP targets (Android, JVM, iOS), the socket transport and state observer are currently **Android-only**. On non-Android targets, metrics are collected in memory but there is no transport to export them. iOS/Desktop support is on the roadmap.
+> **Platform support:** The compiler plugin instruments all KMP targets. Android uses `LocalServerSocket` + ADB forward. iOS simulator uses a direct TCP server on `:18462`. iOS physical devices connect outbound to a Mac-side WebSocket relay via Bonjour auto-discovery, with console logging as fallback.
 
 ## Modules
 
 | Module | Description |
 |--------|-------------|
-| `rebound-runtime` | Runtime library (Android). Compiles for JVM/iOS but transport is Android-only. |
+| `rebound-runtime` | KMP runtime library (Android, iOS, JVM). Full transport on all platforms. |
 | `rebound-compiler` | Kotlin compiler plugin for Kotlin 2.0.x-2.1.x |
 | `rebound-compiler-k2` | Kotlin compiler plugin for Kotlin 2.2+ |
 | `rebound-gradle` | Gradle plugin — auto-wires compiler + runtime, selects correct artifact |
 | `rebound-ide` | Android Studio plugin — 5-tab performance cockpit with editor integration |
+| `tools/rebound-relay` | Mac relay server — bridges iOS physical devices to CLI/IDE via WebSocket |
 | `sample` | Sample Android app |
 
 ## Configuration
@@ -212,13 +214,7 @@ The plugin connects via `adb forward tcp:18462 localabstract:rebound`. Install f
 
 ## CLI
 
-Setup:
-
-```bash
-adb forward tcp:18462 localabstract:rebound
-```
-
-Commands:
+The CLI auto-detects the connection path: direct TCP (iOS simulator or relay), ADB forward (Android), or devicectl console (iOS physical without relay).
 
 ```bash
 ./rebound-cli.sh snapshot   # Full JSON metrics for all tracked composables
@@ -233,6 +229,28 @@ Or query directly:
 echo "snapshot" | nc localhost 18462
 ```
 
+### iOS Physical Device Setup
+
+For iOS physical devices, the runtime connects outbound to a Mac-side relay via WebSocket. The device discovers the relay automatically via Bonjour.
+
+```bash
+# Build the relay (one-time)
+./tools/build-relay.sh
+
+# Start the relay on your Mac
+./tools/rebound-relay
+# → TCP :18462 (CLI/IDE), WebSocket :18463 (devices), Bonjour: _rebound._tcp
+
+# Now run your app on the physical device (same WiFi network)
+# The device auto-discovers the relay and connects
+./rebound-cli.sh snapshot   # works transparently through relay
+```
+
+Override Bonjour discovery with an env var if needed (e.g., different subnet):
+```
+REBOUND_RELAY_HOST=192.168.1.100:18463
+```
+
 ## Kotlin Compatibility
 
 | Kotlin Version | Compiler Artifact | Status |
@@ -244,17 +262,31 @@ echo "snapshot" | nc localhost 18462
 
 The Gradle plugin auto-detects your project's Kotlin version and selects the correct compiler artifact. No manual configuration needed.
 
+## Platform Support
+
+| Platform | Transport | Status |
+|----------|-----------|--------|
+| Android (device/emulator) | `LocalServerSocket` + ADB forward | Stable |
+| iOS Simulator | Direct TCP on `:18462` | Stable |
+| iOS Physical Device | WebSocket → Mac relay (Bonjour auto-discovery) | Stable |
+| iOS Physical Device (no relay) | Console logging via `devicectl` | Stable (one-way) |
+| JVM/Desktop | In-memory (no transport) | Metrics collected, no export |
+
 **Why multiple artifacts?** Kotlin's compiler plugin IR API changes between minor versions. Each artifact is compiled against the matching `kotlin-compiler-embeddable` to ensure binary compatibility.
 
 ## Roadmap
 
-- [ ] **iOS/Desktop transport** — TCP socket server in `iosMain`/`jvmMain` via `ktor-network` for true KMP support
+See [roadmap.md](roadmap.md) for the full iOS roadmap.
+
+- [x] **iOS transport** — TCP server (simulator) + WebSocket relay (physical device) + console fallback
 - [ ] CI budget gates — fail builds when recomposition budgets regress
 - [ ] Flame chart mode in Timeline tab
 - [ ] JetBrains Marketplace publication
 - [ ] Session export/import for team sharing
 - [ ] Baseline snapshots for regression testing
 - [ ] ComposeProof integration for LLM-driven analysis
+- [ ] DNS resolution for relay host override
+- [ ] Multi-device relay routing
 
 ## Documentation
 

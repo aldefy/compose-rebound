@@ -43,7 +43,7 @@ class ReboundConnection(
                 if (!directOk && !forwardOk) {
                     onError?.invoke(
                         "No connection. Android: is a device connected? " +
-                        "iOS physical device: use simulator for live metrics, or view budget violations in Xcode/devicectl console."
+                        "iOS physical device: start rebound-relay for live metrics, or use simulator."
                     )
                     running = false
                     return@Thread

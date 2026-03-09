@@ -464,4 +464,128 @@ class ReboundServerTest {
             stopServer()
         }
     }
+
+    // --- handleCommand tests ---
+
+    @Test
+    fun handleCommandPing() {
+        assertEquals("pong", ReboundServer.handleCommand("ping"))
+    }
+
+    @Test
+    fun handleCommandPingWithWhitespace() {
+        assertEquals("pong", ReboundServer.handleCommand("  ping\n"))
+    }
+
+    @Test
+    fun handleCommandSnapshot() {
+        ReboundTracker.reset()
+        ReboundTracker.enabled = true
+        ReboundTracker.onComposition("HandleCmdTest", BudgetClass.SCREEN.ordinal, 0, "")
+
+        val result = ReboundServer.handleCommand("snapshot")
+        assertTrue(result.startsWith("{"), "Snapshot should be JSON")
+        assertTrue(result.contains("HandleCmdTest"), "Snapshot should contain tracked composable")
+    }
+
+    @Test
+    fun handleCommandSummary() {
+        ReboundTracker.reset()
+        ReboundTracker.enabled = true
+
+        val result = ReboundServer.handleCommand("summary")
+        assertTrue(result.contains("composables"), "Summary should contain composables key")
+    }
+
+    @Test
+    fun handleCommandUnknown() {
+        val result = ReboundServer.handleCommand("foobar")
+        assertTrue(result.contains("error"), "Unknown command should return error JSON")
+        assertTrue(result.contains("foobar"), "Error should include the command name")
+    }
+
+    // --- WebSocket frame encoding/decoding tests ---
+
+    @Test
+    fun wsFrameEncodeDecodeUnmaskedRoundTrip() {
+        val payload = "hello"
+        val frame = WebSocketFrame.encodeTextFrame(payload, masked = false)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Frame should decode successfully")
+        assertEquals(WebSocketFrame.OPCODE_TEXT, decoded.first, "Opcode should be TEXT")
+        assertEquals(payload, decoded.second.decodeToString(), "Payload should round-trip")
+    }
+
+    @Test
+    fun wsFrameEncodeDecodeMaskedRoundTrip() {
+        val payload = "masked message test"
+        val frame = WebSocketFrame.encodeTextFrame(payload, masked = true)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Masked frame should decode successfully")
+        assertEquals(WebSocketFrame.OPCODE_TEXT, decoded.first, "Opcode should be TEXT")
+        assertEquals(payload, decoded.second.decodeToString(), "Masked payload should round-trip")
+    }
+
+    @Test
+    fun wsFrameEncodeDecodeLargePayload() {
+        // Payload > 125 bytes triggers 2-byte extended length
+        val payload = "x".repeat(200)
+        val frame = WebSocketFrame.encodeTextFrame(payload, masked = false)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Large frame should decode successfully")
+        assertEquals(payload, decoded.second.decodeToString(), "Large payload should round-trip")
+    }
+
+    @Test
+    fun wsFramePingFrame() {
+        val frame = WebSocketFrame.encodePingFrame()
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Ping frame should decode")
+        assertEquals(WebSocketFrame.OPCODE_PING, decoded.first, "Opcode should be PING")
+    }
+
+    @Test
+    fun wsFramePongFrame() {
+        val payload = "ping-data".encodeToByteArray()
+        val frame = WebSocketFrame.encodePongFrame(payload)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Pong frame should decode")
+        assertEquals(WebSocketFrame.OPCODE_PONG, decoded.first, "Opcode should be PONG")
+        assertEquals("ping-data", decoded.second.decodeToString(), "Pong payload should match")
+    }
+
+    @Test
+    fun wsFrameEmptyPayload() {
+        val frame = WebSocketFrame.encodeTextFrame("", masked = false)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "Empty frame should decode")
+        assertEquals("", decoded.second.decodeToString(), "Empty payload should round-trip")
+    }
+
+    @Test
+    fun wsFrameJsonPayload() {
+        val json = """{"composables":[],"violations":0}"""
+        val frame = WebSocketFrame.encodeTextFrame(json, masked = true)
+        val decoded = WebSocketFrame.decodeFrame(frame)
+
+        assertNotNull(decoded, "JSON frame should decode")
+        assertEquals(json, decoded.second.decodeToString(), "JSON payload should round-trip")
+    }
+
+    // --- Base64 encoding test ---
+
+    @Test
+    fun base64EncodeKnownValues() {
+        assertEquals("", base64Encode(ByteArray(0)))
+        assertEquals("YQ==", base64Encode("a".encodeToByteArray()))
+        assertEquals("YWI=", base64Encode("ab".encodeToByteArray()))
+        assertEquals("YWJj", base64Encode("abc".encodeToByteArray()))
+        assertEquals("SGVsbG8=", base64Encode("Hello".encodeToByteArray()))
+    }
 }
