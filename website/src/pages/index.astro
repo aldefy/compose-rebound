@@ -1,0 +1,265 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Compose Recomposition Budget Monitor">
+  <!-- Hero -->
+  <section class="relative overflow-hidden py-24 md:py-32">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-slate-200 dark:border-brand-dark-border text-sm text-slate-600 dark:text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        Kotlin 2.0 — 2.3 &middot; Android + iOS
+      </div>
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
+        Catch runaway recompositions<br/>
+        <span class="text-brand-indigo dark:text-brand-indigo-light">before they ship</span>
+      </h1>
+      <p class="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        Budget-based recomposition monitoring for Jetpack Compose.
+        A Screen at 3/s. An Animation at 120/s. Zero config. Debug builds only.
+      </p>
+      <div class="mt-8 flex justify-center gap-4">
+        <a href="#get-started" class="px-6 py-3 rounded-lg bg-brand-indigo hover:bg-brand-indigo-light text-white font-medium transition-colors">
+          Get Started
+        </a>
+        <a href="https://github.com/aldefy/compose-rebound" target="_blank" class="px-6 py-3 rounded-lg border border-slate-300 dark:border-brand-dark-border text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-brand-dark-card font-medium transition-colors">
+          View on GitHub
+        </a>
+      </div>
+      <div class="mt-12 max-w-lg mx-auto text-left">
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border bg-slate-50 dark:bg-brand-dark-card overflow-hidden">
+          <div class="px-4 py-2 border-b border-slate-200 dark:border-brand-dark-border text-xs text-slate-500 font-mono">build.gradle.kts</div>
+          <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
+    id("io.aldefy.rebound") version "0.1.0"
+&#125;</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section class="py-20 bg-slate-50 dark:bg-brand-dark-card/50">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">
+        Your Compose app recomposes 18x/sec<br/>
+        <span class="text-slate-500 dark:text-slate-400">and you don't know it</span>
+      </h2>
+      <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        Without per-composable budgets, you can't tell healthy animation-driven recomposition from pathological state thrashing. Here's what Rebound found in a real production app:
+      </p>
+      <div class="mt-10 overflow-x-auto">
+        <table class="w-full max-w-3xl mx-auto text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-brand-dark-border text-left">
+              <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Composable</th>
+              <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Rate</th>
+              <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Budget</th>
+              <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Skip%</th>
+              <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Status</th>
+            </tr>
+          </thead>
+          <tbody class="font-mono">
+            <tr class="border-b border-slate-100 dark:border-brand-dark-border/50">
+              <td class="py-3 px-4 text-slate-900 dark:text-white">ShimmerBox</td>
+              <td class="py-3 px-4">18/s</td>
+              <td class="py-3 px-4 text-slate-500">5/s</td>
+              <td class="py-3 px-4">0%</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">OVER</span></td>
+            </tr>
+            <tr class="border-b border-slate-100 dark:border-brand-dark-border/50">
+              <td class="py-3 px-4 text-slate-900 dark:text-white">MenuItem</td>
+              <td class="py-3 px-4">13/s</td>
+              <td class="py-3 px-4 text-slate-500">30/s</td>
+              <td class="py-3 px-4">0%</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">NEAR</span></td>
+            </tr>
+            <tr class="border-b border-slate-100 dark:border-brand-dark-border/50">
+              <td class="py-3 px-4 text-slate-900 dark:text-white">DestinationItem</td>
+              <td class="py-3 px-4">9/s</td>
+              <td class="py-3 px-4 text-slate-500">5/s</td>
+              <td class="py-3 px-4">0%</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">OVER</span></td>
+            </tr>
+            <tr class="border-b border-slate-100 dark:border-brand-dark-border/50">
+              <td class="py-3 px-4 text-slate-900 dark:text-white">TravelGuideCard</td>
+              <td class="py-3 px-4">8/s</td>
+              <td class="py-3 px-4 text-slate-500">5/s</td>
+              <td class="py-3 px-4">0%</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">OVER</span></td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-slate-900 dark:text-white">AppScaffold</td>
+              <td class="py-3 px-4">2/s</td>
+              <td class="py-3 px-4 text-slate-500">3/s</td>
+              <td class="py-3 px-4">68%</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">OK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution -->
+  <section id="features" class="py-20">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Three layers of defense</h2>
+      <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        Rebound instruments at compile time, monitors at runtime, and reports in your IDE. All automatic.
+      </p>
+      <div class="mt-12 grid md:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-6 bg-white dark:bg-brand-dark-card">
+          <div class="w-10 h-10 rounded-lg bg-brand-indigo/10 dark:bg-brand-indigo/20 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-brand-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Compiler Plugin</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Instruments every <code class="text-xs bg-slate-100 dark:bg-brand-dark px-1 py-0.5 rounded">@Composable</code> at the IR level. Infers budget class from call-site heuristics. Zero annotation required. Debug builds only.
+          </p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-6 bg-white dark:bg-brand-dark-card">
+          <div class="w-10 h-10 rounded-lg bg-brand-teal/10 dark:bg-brand-teal/20 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Budget Engine</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Six budget classes: Screen (3/s), Container (10/s), Interactive (30/s), List Item (60/s), Animated (120/s), Leaf (5/s). Dynamic scaling during scroll, animation, and input.
+          </p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-6 bg-white dark:bg-brand-dark-card">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white">IDE Cockpit</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Five-tab Android Studio tool window: live monitor with sparklines, hot spot ranking, timeline heatmap, parameter stability matrix, and session history with VCS correlation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Budget Classes -->
+  <section class="py-20 bg-slate-50 dark:bg-brand-dark-card/50">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Every composable gets a budget</h2>
+      <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        Flat thresholds are wrong for most of your composables. Rebound assigns budgets by role.
+      </p>
+      <div class="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-brand-indigo">3/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Screen</div>
+          <div class="mt-1 text-xs text-slate-500">Full pages</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-brand-indigo">10/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Container</div>
+          <div class="mt-1 text-xs text-slate-500">Row, Column, Box</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-brand-teal">30/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Interactive</div>
+          <div class="mt-1 text-xs text-slate-500">Buttons, fields</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-brand-teal">60/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">List Item</div>
+          <div class="mt-1 text-xs text-slate-500">LazyColumn items</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-purple-500">120/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Animated</div>
+          <div class="mt-1 text-xs text-slate-500">animate* APIs</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 dark:border-brand-dark-border p-4 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-2xl font-bold text-brand-indigo">5/s</div>
+          <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Leaf</div>
+          <div class="mt-1 text-xs text-slate-500">Text, Icon, Image</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform Support -->
+  <section id="platforms" class="py-20">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Android and iOS</h2>
+      <p class="mt-4 text-center text-slate-600 dark:text-slate-400">
+        Full KMP support. The compiler plugin instruments all targets. Transport adapts per platform.
+      </p>
+      <div class="mt-10 grid md:grid-cols-4 gap-6">
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-5 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-3xl mb-3">&#x1F4F1;</div>
+          <h3 class="font-semibold text-slate-900 dark:text-white">Android</h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">ADB socket forward<br/>Device + Emulator</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-5 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-3xl mb-3">&#x1F5A5;</div>
+          <h3 class="font-semibold text-slate-900 dark:text-white">iOS Simulator</h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Direct TCP on :18462<br/>Zero setup</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-5 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-3xl mb-3">&#x1F4E1;</div>
+          <h3 class="font-semibold text-slate-900 dark:text-white">iOS Device</h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">WebSocket relay<br/>Bonjour auto-discovery</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-brand-dark-border p-5 bg-white dark:bg-brand-dark-card text-center">
+          <div class="text-3xl mb-3">&#x2615;</div>
+          <h3 class="font-semibold text-slate-900 dark:text-white">JVM / Desktop</h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">In-memory metrics<br/>Transport planned</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Getting Started -->
+  <section id="get-started" class="py-20 bg-slate-50 dark:bg-brand-dark-card/50">
+    <div class="max-w-4xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Get started in 60 seconds</h2>
+      <div class="mt-12 space-y-8">
+        <div class="flex gap-4">
+          <div class="flex-none w-8 h-8 rounded-full bg-brand-indigo text-white flex items-center justify-center text-sm font-bold">1</div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-slate-900 dark:text-white">Apply the Gradle plugin</h3>
+            <div class="mt-2 rounded-lg border border-slate-200 dark:border-brand-dark-border bg-white dark:bg-brand-dark-card overflow-hidden">
+              <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
+    id("io.aldefy.rebound") version "0.1.0"
+&#125;</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-none w-8 h-8 rounded-full bg-brand-indigo text-white flex items-center justify-center text-sm font-bold">2</div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-slate-900 dark:text-white">Run your debug build</h3>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Rebound instruments every <code class="text-xs bg-slate-100 dark:bg-brand-dark px-1 py-0.5 rounded">@Composable</code> automatically. No annotations needed.
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-none w-8 h-8 rounded-full bg-brand-indigo text-white flex items-center justify-center text-sm font-bold">3</div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-slate-900 dark:text-white">See violations</h3>
+            <div class="mt-2 rounded-lg border border-slate-200 dark:border-brand-dark-border bg-white dark:bg-brand-dark-card overflow-hidden">
+              <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>$ ./rebound-cli.sh summary
+&#123;"composables":[
+  &#123;"name":"ShimmerBox","rate":18,"budget":5,"class":"LEAF","over":true&#125;,
+  &#123;"name":"MenuItem","rate":13,"budget":30,"class":"INTERACTIVE","over":false&#125;
+],"violations":4,"total":127&#125;</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-12 rounded-xl border border-brand-teal/30 bg-brand-teal/5 dark:bg-brand-teal/10 p-6">
+        <h3 class="font-semibold text-slate-900 dark:text-white">iOS Physical Device?</h3>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          Build and start the relay on your Mac. The device discovers it via Bonjour automatically.
+        </p>
+        <div class="mt-3 rounded-lg bg-white dark:bg-brand-dark-card border border-slate-200 dark:border-brand-dark-border overflow-hidden">
+          <pre class="p-3 text-sm font-mono text-slate-800 dark:text-slate-200"><code>./tools/build-relay.sh && ./tools/rebound-relay</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
