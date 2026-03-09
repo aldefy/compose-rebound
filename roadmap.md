@@ -18,7 +18,7 @@
 
 | App | Kotlin | iOS | Android |
 |-----|--------|-----|---------|
-| TravvWorld KMP | 2.0.21 | PASS | PASS |
+| KMP App (2-target) | 2.0.21 | PASS | PASS |
 | StickerExplode | 2.1.0 | — | PASS |
 | HelloDistort | 2.1.0 | — | PASS |
 | Lumen | 2.0.21 | PASS | PASS |

@@ -13,7 +13,7 @@
 #   iOS simulator: direct TCP on localhost:18462
 #   iOS physical device: parses structured console output via devicectl
 #
-# Works with: Claude Code, Gemini, ComposeProof MCP, any shell tool
+# Works with: ComposeProof MCP, any shell tool, AI coding agents
 
 PORT=18462
 CMD="${1:-snapshot}"
