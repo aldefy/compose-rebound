@@ -12,7 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 @Composable
 fun ReboundRoot(content: @Composable () -> Unit) {
     DisposableEffect(Unit) {
-        platformInstallObserver()
+        StateTracker.install()
         onDispose { /* observer cleanup handled by platform */ }
     }
     content()

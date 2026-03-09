@@ -1,5 +1,5 @@
 package io.aldefy.rebound
 
 actual fun platformInit() {
-    // No socket server on JVM desktop
+    ReboundServer.start()
 }

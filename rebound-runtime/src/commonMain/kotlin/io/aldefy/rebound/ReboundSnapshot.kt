@@ -21,7 +21,8 @@ data class ReboundSnapshot(
         val lastInvalidation: String = "",
         val parent: String = "",
         val paramStates: String = "",
-        val depth: Int = 0
+        val depth: Int = 0,
+        val paramTypes: String = ""
     )
 
     /** Export as JSON string (no external dependencies) */
@@ -45,7 +46,8 @@ data class ReboundSnapshot(
             sb.append("      \"lastInvalidation\": \"${escapeJson(snap.lastInvalidation)}\",\n")
             sb.append("      \"parent\": \"${escapeJson(snap.parent)}\",\n")
             sb.append("      \"paramStates\": \"${escapeJson(snap.paramStates)}\",\n")
-            sb.append("      \"depth\": ${snap.depth}\n")
+            sb.append("      \"depth\": ${snap.depth},\n")
+            sb.append("      \"paramTypes\": \"${escapeJson(snap.paramTypes)}\"\n")
             sb.append("    }")
             if (i < entries.size - 1) sb.append(",")
             sb.append("\n")
@@ -93,7 +95,8 @@ data class ReboundSnapshot(
                     lastInvalidation = extractString("lastInvalidation"),
                     parent = extractString("parent"),
                     paramStates = extractString("paramStates"),
-                    depth = extractInt("depth")
+                    depth = extractInt("depth"),
+                    paramTypes = extractString("paramTypes")
                 )
             }
             return ReboundSnapshot(composables)

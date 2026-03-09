@@ -87,19 +87,21 @@ object ReboundTracker {
         budgetClassOrdinal: Int,
         changedMask: Int,
         paramNames: String,
-        changedMasks: String = ""
+        changedMasks: String = "",
+        paramTypes: String = ""
     ) {
         if (!enabled) return
         if (!initialized) {
             initialized = true
             platformInit()
+            StateTracker.install()
         }
 
         // Publish scope name for state tracking
         currentScopeName = key
 
-        // Consume pending invalidation reason from platform state tracker
-        val pendingReason = platformConsumeInvalidationReason()
+        // Consume pending invalidation reason from snapshot observer
+        val pendingReason = StateTracker.consumePendingReason()
         if (pendingReason.isNotEmpty()) {
             recordInvalidation(key, pendingReason)
         }
@@ -130,6 +132,9 @@ object ReboundTracker {
                 ChangedMaskDecoder.decode(changedMask, paramNames)
             }
             m.lastParamStates = decoded.joinToString(",") { "${it.first}=${it.second.name}" }
+        }
+        if (paramTypes.isNotEmpty()) {
+            m.lastParamTypes = paramTypes
         }
 
         if (logCompositions) {
@@ -214,7 +219,8 @@ object ReboundTracker {
                     lastInvalidation = getLastInvalidationReason(key),
                     parent = parentMap[key] ?: "",
                     paramStates = m.lastParamStates,
-                    depth = depthMap[key] ?: 0
+                    depth = depthMap[key] ?: 0,
+                    paramTypes = m.lastParamTypes
                 )
             }
         )

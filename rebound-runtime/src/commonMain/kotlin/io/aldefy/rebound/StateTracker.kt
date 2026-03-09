@@ -12,17 +12,17 @@ import androidx.compose.runtime.snapshots.Snapshot
  * Chain: State X written → Snapshot applied → Scope Y invalidated → Composable Z recomposes
  *        ↑ we capture X's label here, attribute to Z in onComposition
  *
- * Android-only — other platforms get a no-op via expect/actual.
+ * KMP — uses Compose runtime's Snapshot.registerApplyObserver (available on all targets).
  */
 object StateTracker {
 
-    @Volatile
+    @kotlin.concurrent.Volatile
     private var installed = false
 
     private var applyHandle: ObserverHandle? = null
 
     /** Labels of state objects from the most recent Snapshot apply (pre-recomposition). */
-    @Volatile
+    @kotlin.concurrent.Volatile
     private var pendingStateLabels: List<String> = emptyList()
 
     fun install() {

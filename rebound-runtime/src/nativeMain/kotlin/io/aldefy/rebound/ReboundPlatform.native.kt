@@ -1,11 +1,5 @@
 package io.aldefy.rebound
 
-actual fun platformInit() {
-    // No socket server on native — logcat only
-}
-
-actual fun platformInstallObserver() {
-    // No state observer on native
-}
-
-actual fun platformConsumeInvalidationReason(): String = ""
+// No-op stubs moved to iosMain which provides actual implementations.
+// If non-iOS native targets are added later, create corresponding
+// source sets (e.g. linuxMain) with their own actual declarations.

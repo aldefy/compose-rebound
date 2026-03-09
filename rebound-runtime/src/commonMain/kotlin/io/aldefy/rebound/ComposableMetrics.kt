@@ -15,6 +15,9 @@ class ComposableMetrics(var budgetClass: BudgetClass) {
     /** Last decoded parameter states from $changed bitmask, e.g. "user=DIFFERENT,onClick=STATIC" */
     @Volatile var lastParamStates: String = ""
 
+    /** Compile-time parameter type classifications, e.g. "stable,lambda,unstable" */
+    @Volatile var lastParamTypes: String = ""
+
     val totalCount: Long get() = compositionCount
 
     val forcedRecompositionCount: Long get() = forcedCount
