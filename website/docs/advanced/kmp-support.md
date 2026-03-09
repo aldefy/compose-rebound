@@ -69,7 +69,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.1.0"
 }
 ```
 

@@ -3,7 +3,7 @@ plugins {
 }
 
 val reboundVersion = "0.1.0"
-val reboundGroup = "io.aldefy.rebound"
+val reboundGroup = "io.github.aldefy.rebound"
 
 group = reboundGroup
 version = reboundVersion
