@@ -36,11 +36,15 @@ class ReboundConnection(
 
         pollThread = Thread({
             try {
-                // Set up adb forward
-                val forwardOk = setupAdbForward()
-                log.warn("adb forward result: $forwardOk")
-                if (!forwardOk) {
-                    onError?.invoke("Failed to set up adb forward. Is a device connected?")
+                // Try direct TCP first (iOS simulator or already-forwarded)
+                val directOk = tryDirectTcp()
+                val forwardOk = if (!directOk) setupAdbForward() else false
+                log.warn("connection: direct=$directOk, adb=$forwardOk")
+                if (!directOk && !forwardOk) {
+                    onError?.invoke(
+                        "No connection. Android: is a device connected? " +
+                        "iOS physical device: use simulator for live metrics, or view budget violations in Xcode/devicectl console."
+                    )
                     running = false
                     return@Thread
                 }
@@ -108,6 +112,15 @@ class ReboundConnection(
         } catch (e: Exception) {
             log.debug("sendCommand($command) failed: ${e.message}")
             null
+        }
+    }
+
+    private fun tryDirectTcp(): Boolean {
+        return try {
+            val response = sendCommand("ping")
+            response == "pong"
+        } catch (e: Exception) {
+            false
         }
     }
 

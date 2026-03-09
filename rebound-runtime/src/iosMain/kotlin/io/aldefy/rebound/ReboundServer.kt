@@ -2,6 +2,7 @@
 
 package io.aldefy.rebound
 
+import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
@@ -9,18 +10,21 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.refTo
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.sizeOf
-import platform.darwin.dispatch_async
-import platform.darwin.dispatch_queue_create
+import kotlinx.cinterop.usePinned
+import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSThread
 import platform.posix.AF_INET
-import platform.posix.INADDR_LOOPBACK
+import platform.posix.INADDR_ANY
 import platform.posix.SHUT_RDWR
 import platform.posix.SOCK_STREAM
 import platform.posix.SOL_SOCKET
 import platform.posix.SO_RCVTIMEO
 import platform.posix.SO_REUSEADDR
+import platform.posix.SO_SNDTIMEO
 import platform.posix.accept
 import platform.posix.bind
 import platform.posix.close
+import platform.posix.errno
 import platform.posix.listen
 import platform.posix.recv
 import platform.posix.send
@@ -30,69 +34,103 @@ import platform.posix.sockaddr
 import platform.posix.sockaddr_in
 import platform.posix.socket
 import platform.posix.timeval
+import platform.posix.usleep
 import kotlin.concurrent.AtomicInt
 
-/**
- * TCP socket server for iOS that exposes ReboundTracker metrics to external tools
- * (IDE plugin, CLI).
- *
- * Protocol (identical to Android):
- *   Client connects to TCP 127.0.0.1:18462
- *   Client sends a line command, server responds with JSON + newline, then closes.
- *
- * Commands:
- *   "ping"       -> "pong"
- *   "snapshot"   -> full JSON snapshot
- *   "summary"    -> compact summary: top violators + stats
- *   "telemetry"  -> anonymized aggregate stats
- *
- * Connect from Mac via: iproxy 18462 18462
- * Then: echo "snapshot" | nc localhost 18462
- */
 object ReboundServer {
 
-    private const val PORT: UShort = 18462u
+    internal const val DEFAULT_PORT: UShort = 18462u
+    internal var port: UShort = DEFAULT_PORT
     private const val BACKLOG = 5
+    /** Interval between console-mode JSON snapshots (microseconds). Default: 2 seconds. */
+    var consoleIntervalUs: UInt = 2_000_000u
 
-    // AtomicInt for thread-safe state: 0 = stopped, 1 = running
     private val runningState = AtomicInt(0)
     private val serverFdHolder = AtomicInt(-1)
+    // Signals that the accept loop has started blocking on accept()
+    private val readyState = AtomicInt(0)
 
     private val running: Boolean get() = runningState.value == 1
+    val isRunning: Boolean get() = running
+    val isReady: Boolean get() = readyState.value == 1
+
+    internal fun isSimulator(): Boolean =
+        NSProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] != null
+
+    internal fun htons(value: UShort): UShort {
+        val v = value.toInt()
+        return ((v shr 8) or ((v and 0xFF) shl 8)).toUShort()
+    }
 
     fun start() {
         if (!runningState.compareAndSet(0, 1)) return
+        readyState.value = 0
 
-        val queue = dispatch_queue_create("io.aldefy.rebound.server", null)
-        dispatch_async(queue) {
-            try {
-                val fd = createServerSocket()
-                if (fd < 0) {
-                    ReboundLogger.warn("Rebound", "Server failed to bind on port $PORT")
-                    runningState.value = 0
-                    return@dispatch_async
-                }
-                serverFdHolder.value = fd
-                ReboundLogger.log("Rebound", "Server listening on 127.0.0.1:$PORT")
+        if (isSimulator()) {
+            startTcpServer()
+        } else {
+            startConsoleMode()
+        }
+    }
 
-                while (running) {
-                    val clientFd = accept(fd, null, null)
+    private fun startTcpServer() {
+        val fd = createServerSocket()
+        if (fd < 0) {
+            ReboundLogger.warn("Rebound", "Server failed to bind on port $port")
+            runningState.value = 0
+            return
+        }
+        serverFdHolder.value = fd
+        ReboundLogger.log("Rebound", "Server listening on 0.0.0.0:$port (simulator)")
+
+        val serverFd = fd
+        val thread = object : NSThread() {
+            override fun main() {
+                ReboundLogger.log("Rebound", "Accept thread started (fd=$serverFd)")
+                readyState.value = 1
+
+                while (runningState.value == 1) {
+                    val clientFd = accept(serverFd, null, null)
                     if (clientFd < 0) {
-                        if (!running) break
+                        if (runningState.value != 1) break
+                        ReboundLogger.warn("Rebound", "accept() error: errno=$errno")
                         continue
                     }
+                    ReboundLogger.log("Rebound", "Client connected (fd=$clientFd)")
                     handleClient(clientFd)
                 }
-            } catch (e: Exception) {
-                ReboundLogger.warn("Rebound", "Server error: ${e.message}")
-            } finally {
-                runningState.value = 0
+                ReboundLogger.log("Rebound", "Accept loop exited")
             }
         }
+        thread.name = "Rebound-Server"
+        thread.start()
+    }
+
+    private fun startConsoleMode() {
+        ReboundLogger.log("Rebound", "Console mode (physical device) — structured logs every ${consoleIntervalUs / 1_000_000u}s")
+        readyState.value = 1
+
+        val thread = object : NSThread() {
+            override fun main() {
+                while (runningState.value == 1) {
+                    val snapshot = ReboundTracker.toJson()
+                    ReboundLogger.log("Rebound:snapshot", snapshot)
+
+                    val summary = buildSummary()
+                    ReboundLogger.log("Rebound:summary", summary)
+
+                    usleep(consoleIntervalUs)
+                }
+                ReboundLogger.log("Rebound", "Console mode stopped")
+            }
+        }
+        thread.name = "Rebound-Console"
+        thread.start()
     }
 
     fun stop() {
         runningState.value = 0
+        readyState.value = 0
         val fd = serverFdHolder.value
         if (fd >= 0) {
             shutdown(fd, SHUT_RDWR)
@@ -101,46 +139,30 @@ object ReboundServer {
         }
     }
 
-    val isRunning: Boolean get() = running
-
-    /** Host-to-network byte order for 16-bit value. */
-    private fun htons(value: UShort): UShort {
-        val v = value.toInt()
-        return ((v shr 8) or ((v and 0xFF) shl 8)).toUShort()
-    }
-
-    /** Host-to-network byte order for 32-bit value. */
-    private fun htonl(value: UInt): UInt {
-        return ((value shr 24) or
-                ((value shr 8) and 0xFF00u) or
-                ((value shl 8) and 0xFF0000u) or
-                (value shl 24))
-    }
-
     private fun createServerSocket(): Int = memScoped {
         val fd = socket(AF_INET, SOCK_STREAM, 0)
-        if (fd < 0) return -1
+        if (fd < 0) {
+            ReboundLogger.warn("Rebound", "socket() failed, errno=$errno")
+            return -1
+        }
 
-        // SO_REUSEADDR to avoid EADDRINUSE on restart
         val optVal = intArrayOf(1)
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, optVal.refTo(0), 4u.convert())
 
         val addr = alloc<sockaddr_in>()
+        addr.sin_len = sizeOf<sockaddr_in>().toUByte()
         addr.sin_family = AF_INET.convert()
-        addr.sin_port = htons(PORT)
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK)
+        addr.sin_port = htons(port)
+        addr.sin_addr.s_addr = INADDR_ANY
 
-        val bindResult = bind(
-            fd,
-            addr.ptr.reinterpret<sockaddr>(),
-            sizeOf<sockaddr_in>().convert()
-        )
-        if (bindResult < 0) {
+        if (bind(fd, addr.ptr.reinterpret<sockaddr>(), sizeOf<sockaddr_in>().convert()) < 0) {
+            ReboundLogger.warn("Rebound", "bind() failed, errno=$errno")
             close(fd)
             return -1
         }
 
         if (listen(fd, BACKLOG) < 0) {
+            ReboundLogger.warn("Rebound", "listen() failed, errno=$errno")
             close(fd)
             return -1
         }
@@ -148,21 +170,50 @@ object ReboundServer {
         fd
     }
 
+    // Made internal for testing; called from NSThread
+    internal fun acceptLoop() {
+        acceptLoopDirect(serverFdHolder.value)
+    }
+
+    private fun acceptLoopDirect(serverFd: Int) {
+        ReboundLogger.log("Rebound", "acceptLoopDirect (fd=$serverFd)")
+        readyState.value = 1
+
+        try {
+            while (running) {
+                val clientFd = accept(serverFd, null, null)
+                if (clientFd < 0) {
+                    if (!running) break
+                    continue
+                }
+                handleClient(clientFd)
+            }
+        } catch (e: Exception) {
+            ReboundLogger.warn("Rebound", "Accept loop error: ${e.message}")
+        }
+    }
+
     private fun handleClient(clientFd: Int) {
         try {
-            // Set receive timeout: 2 seconds
             memScoped {
                 val timeout = alloc<timeval>()
                 timeout.tv_sec = 2
                 timeout.tv_usec = 0
                 setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, timeout.ptr, sizeOf<timeval>().convert())
+                setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, timeout.ptr, sizeOf<timeval>().convert())
             }
 
             val buffer = ByteArray(1024)
-            val bytesRead = recv(clientFd, buffer.refTo(0), buffer.size.convert(), 0)
-            if (bytesRead <= 0) return
+            val bytesRead = buffer.usePinned { pinned ->
+                recv(clientFd, pinned.addressOf(0), buffer.size.convert(), 0)
+            }
+            if (bytesRead <= 0) {
+                ReboundLogger.warn("Rebound", "recv=$bytesRead errno=$errno")
+                return
+            }
 
             val command = buffer.decodeToString(0, bytesRead.toInt()).trim()
+            ReboundLogger.log("Rebound", "Command: '$command'")
 
             val response = when (command) {
                 "ping" -> "pong"
@@ -173,15 +224,17 @@ object ReboundServer {
             }
 
             val responseBytes = (response + "\n").encodeToByteArray()
-            send(clientFd, responseBytes.refTo(0), responseBytes.size.convert(), 0)
-        } catch (_: Exception) {
-            // Client disconnected or timeout
+            responseBytes.usePinned { pinned ->
+                send(clientFd, pinned.addressOf(0), responseBytes.size.convert(), 0)
+            }
+        } catch (e: Exception) {
+            ReboundLogger.warn("Rebound", "handleClient error: ${e.message}")
         } finally {
             close(clientFd)
         }
     }
 
-    private fun buildSummary(): String {
+    internal fun buildSummary(): String {
         val snap = ReboundTracker.snapshot()
         if (snap.isEmpty()) return """{"composables":[],"violations":0}"""
 
