@@ -93,8 +93,13 @@ object ReboundTracker {
         if (!enabled) return
         if (!initialized) {
             initialized = true
-            platformInit()
-            StateTracker.install()
+            try {
+                platformInit()
+                StateTracker.install()
+            } catch (_: Throwable) {
+                // Gracefully degrade in environments where platform APIs are
+                // unavailable (e.g. Android local unit tests without full framework).
+            }
         }
 
         // Publish scope name for state tracking
