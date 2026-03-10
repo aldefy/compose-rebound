@@ -13,6 +13,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 gradlePlugin {
     website = "https://github.com/aldefy/compose-rebound"
     vcsUrl = "https://github.com/aldefy/compose-rebound"
