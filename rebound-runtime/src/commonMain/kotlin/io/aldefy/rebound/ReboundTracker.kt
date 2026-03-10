@@ -96,9 +96,10 @@ object ReboundTracker {
             try {
                 platformInit()
                 StateTracker.install()
-            } catch (_: Throwable) {
+            } catch (e: Throwable) {
                 // Gracefully degrade in environments where platform APIs are
                 // unavailable (e.g. Android local unit tests without full framework).
+                ReboundLogger.warn(TAG, "Init failed (expected in unit tests): ${e.message}")
             }
         }
 

@@ -25,6 +25,12 @@ class ReboundGradlePlugin : Plugin<Project> {
             it.description = "Fetch anonymized aggregate stats by budget class"
             it.command = "telemetry"
         }
+        target.tasks.register("reboundSave", ReboundSaveTask::class.java) {
+            it.description = "Save a live Rebound snapshot to a JSON file for later diffing"
+        }
+        target.tasks.register("reboundDiff", ReboundDiffTask::class.java) {
+            it.description = "Compare two saved Rebound snapshots and report regressions/improvements"
+        }
 
         target.afterEvaluate {
             if (!extension.enabled.get()) return@afterEvaluate
