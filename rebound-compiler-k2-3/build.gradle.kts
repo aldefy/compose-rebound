@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version "2.3.10"
 }
 
-val reboundVersion = "0.1.0"
-val reboundGroup = "io.github.aldefy.rebound"
+val reboundVersion = property("rebound_version") as String
+val reboundGroup = property("rebound_group") as String
 
 group = reboundGroup
 version = reboundVersion
