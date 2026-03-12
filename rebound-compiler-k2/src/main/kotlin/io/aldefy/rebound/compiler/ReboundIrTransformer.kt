@@ -64,6 +64,8 @@ class ReboundIrTransformer(
     )
 
     private val composableAnnotation = FqName("androidx.compose.runtime.Composable")
+    private val stableFqName = FqName("androidx.compose.runtime.Stable")
+    private val immutableFqName = FqName("androidx.compose.runtime.Immutable")
 
     private val trackerClassId = ClassId(
         FqName("io.aldefy.rebound"),
@@ -179,6 +181,11 @@ class ReboundIrTransformer(
             userParams.joinToString(",") { it.name.asString() }
         } else ""
 
+        // Build paramTypes classification string
+        val paramTypes = if (composeCompilerRan && userParams.isNotEmpty()) {
+            userParams.joinToString(",") { classifyParamType(it) }
+        } else ""
+
         // Infer budget class from IR structure
         val budgetClassOrdinal = inferBudgetClass(function)
 
@@ -205,6 +212,8 @@ class ReboundIrTransformer(
                 builder.irString("")
             }
             setArgumentByIndex(trackerParams, 4, masksExpr)
+            // arg 5: paramTypes (String) — compile-time type classifications
+            setArgumentByIndex(trackerParams, 5, builder.irString(paramTypes))
 
             // Set the dispatch receiver to the ReboundTracker object instance
             if (trackerClass != null) {
@@ -537,6 +546,50 @@ class ReboundIrTransformer(
         val parts = fqName.split(".")
         val classIdx = parts.indexOfFirst { it[0].isUpperCase() || it.contains("$") || it == "<anonymous>" }
         return if (classIdx > 0) parts.subList(0, classIdx).joinToString(".") + "." else ""
+    }
+
+    /**
+     * Classify a parameter's type for Strong Skipping Mode awareness.
+     * Returns "lambda", "stable", or "unstable".
+     */
+    private fun classifyParamType(param: IrValueParameter): String {
+        val type = param.type
+        val classFqn = type.classFqName?.asString() ?: ""
+
+        // Lambda: FunctionN, KFunctionN, or @Composable function type
+        if (classFqn.startsWith("kotlin.Function") ||
+            classFqn.startsWith("kotlin.reflect.KFunction") ||
+            type.hasAnnotation(composableAnnotation)
+        ) {
+            return "lambda"
+        }
+
+        // Stable: primitives, String, Unit, enums, @Stable/@Immutable annotated
+        val primitives = setOf(
+            "kotlin.Int", "kotlin.Long", "kotlin.Float", "kotlin.Double",
+            "kotlin.Boolean", "kotlin.Byte", "kotlin.Short", "kotlin.Char",
+            "kotlin.String", "kotlin.Unit"
+        )
+        if (classFqn in primitives) return "stable"
+
+        // Check if the class itself has @Stable or @Immutable
+        val classSymbol = type.classFqName?.let {
+            pluginContext.referenceClass(ClassId.topLevel(FqName(classFqn)))
+        }
+        if (classSymbol != null) {
+            val classDecl = classSymbol.owner
+            if (classDecl.hasAnnotation(stableFqName) ||
+                classDecl.hasAnnotation(immutableFqName)
+            ) {
+                return "stable"
+            }
+            // Enum classes are stable
+            if (classDecl.kind == org.jetbrains.kotlin.descriptors.ClassKind.ENUM_CLASS) {
+                return "stable"
+            }
+        }
+
+        return "unstable"
     }
 
     private fun inferBudgetClass(function: IrFunction): Int {

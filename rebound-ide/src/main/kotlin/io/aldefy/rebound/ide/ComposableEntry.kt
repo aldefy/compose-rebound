@@ -14,7 +14,8 @@ data class ComposableEntry(
     var invalidationReason: String = "",
     var parentFqn: String = "",
     var depth: Int = 0,
-    var paramStates: String = ""
+    var paramStates: String = "",
+    var paramTypes: String = ""
 ) {
     /** Simple function name, e.g. "StickerCanvas" or "HomeScreen.Scaffold{}" */
     val simpleName: String

@@ -105,7 +105,8 @@ data class SessionData(
                 invalidationReason = map["invalidationReason"] as? String ?: "",
                 parentFqn = map["parentFqn"] as? String ?: "",
                 depth = (map["depth"] as? Number)?.toInt() ?: 0,
-                paramStates = map["paramStates"] as? String ?: ""
+                paramStates = map["paramStates"] as? String ?: "",
+                paramTypes = map["paramTypes"] as? String ?: ""
             )
         }
     }
@@ -126,7 +127,8 @@ private fun appendComposableEntry(sb: StringBuilder, entry: ComposableEntry) {
     sb.append("\"invalidationReason\": \"${escapeJson(entry.invalidationReason)}\", ")
     sb.append("\"parentFqn\": \"${escapeJson(entry.parentFqn)}\", ")
     sb.append("\"depth\": ${entry.depth}, ")
-    sb.append("\"paramStates\": \"${escapeJson(entry.paramStates)}\"")
+    sb.append("\"paramStates\": \"${escapeJson(entry.paramStates)}\", ")
+    sb.append("\"paramTypes\": \"${escapeJson(entry.paramTypes)}\"")
     sb.append("}")
 }
 

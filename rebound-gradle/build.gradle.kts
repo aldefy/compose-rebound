@@ -33,4 +33,19 @@ gradlePlugin {
     }
 }
 
+// Generate version constant so the plugin resolves its own version at runtime
+val generateVersion by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated-src/version")
+    val reboundVersion = project.property("rebound_version") as String
+    outputs.dir(outputDir)
+    doLast {
+        val dir = outputDir.get().file("io/aldefy/rebound/gradle").asFile
+        dir.mkdirs()
+        dir.resolve("ReboundVersion.kt").writeText(
+            "package io.aldefy.rebound.gradle\n\ninternal const val REBOUND_VERSION = \"$reboundVersion\"\n"
+        )
+    }
+}
+kotlin.sourceSets.main { kotlin.srcDir(generateVersion) }
+
 apply(from = file("../gradle/publish-convention.gradle.kts"))

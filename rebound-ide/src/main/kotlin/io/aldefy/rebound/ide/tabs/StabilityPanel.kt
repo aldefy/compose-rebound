@@ -30,6 +30,14 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
     private val paramTable = JBTable(paramTableModel).apply {
         fillsViewportHeight = true
     }
+    private val strongSkippingBanner = JLabel().apply {
+        border = BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, JBColor.ORANGE),
+            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        )
+        foreground = JBColor(Color(180, 100, 0), Color(220, 160, 50))
+        isVisible = false
+    }
 
     // --- Bottom: Cascade Tree ---
     private val cascadeSummaryLabel = JLabel("No composable selected")
@@ -60,14 +68,19 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
 
     private fun buildParamMatrixPanel(): JPanel {
         return JPanel(BorderLayout()).apply {
-            val header = JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.X_AXIS)
-                border = BorderFactory.createEmptyBorder(4, 8, 4, 8)
-                add(JLabel("Composable: "))
-                add(composableSelector)
-                add(Box.createHorizontalGlue())
+            val topPanel = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                val header = JPanel().apply {
+                    layout = BoxLayout(this, BoxLayout.X_AXIS)
+                    border = BorderFactory.createEmptyBorder(4, 8, 4, 8)
+                    add(JLabel("Composable: "))
+                    add(composableSelector)
+                    add(Box.createHorizontalGlue())
+                }
+                add(header)
+                add(strongSkippingBanner)
             }
-            add(header, BorderLayout.NORTH)
+            add(topPanel, BorderLayout.NORTH)
             add(JBScrollPane(paramTable), BorderLayout.CENTER)
         }
     }
@@ -134,19 +147,31 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
 
         // Parse "user=DIFFERENT,onClick=STATIC,items=UNCERTAIN"
         val pairs = entry.paramStates.split(",")
-        for (pair in pairs) {
+        val types = if (entry.paramTypes.isNotBlank()) entry.paramTypes.split(",") else emptyList()
+        for ((idx, pair) in pairs.withIndex()) {
             val eqIdx = pair.indexOf('=')
             if (eqIdx < 0) continue
             val paramName = pair.substring(0, eqIdx).trim()
             val stability = pair.substring(eqIdx + 1).trim()
+            val paramType = types.getOrElse(idx) { "" }.trim()
             if (paramName.isNotBlank()) {
-                paramEntries.add(ParamRow(paramName, stability))
+                paramEntries.add(ParamRow(paramName, stability, paramType))
             }
         }
         if (paramEntries.isEmpty()) {
             paramEntries.add(ParamRow("(no stability data)", "\u2014"))
         }
         paramTableModel.fireTableDataChanged()
+
+        // Show Strong Skipping banner when skip rate < 20% and majority params are unstable/lambda
+        val unstableLambdaCount = paramEntries.count { it.paramType == "unstable" || it.paramType == "lambda" }
+        val hasTypeInfo = paramEntries.any { it.paramType.isNotEmpty() }
+        if (hasTypeInfo && entry.skipPercent >= 0 && entry.skipPercent < 20.0 && unstableLambdaCount > paramEntries.size / 2) {
+            strongSkippingBanner.text = "Strong Skipping active \u2014 low skip rate likely due to $unstableLambdaCount unstable/lambda params failing referential equality (===)."
+            strongSkippingBanner.isVisible = true
+        } else {
+            strongSkippingBanner.isVisible = false
+        }
     }
 
     // --- Cascade Tree ---
@@ -213,8 +238,16 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
 
     private data class ParamRow(
         val paramName: String,
-        val stability: String
+        val stability: String,
+        val paramType: String = ""
     ) {
+        val equalityCheck: String
+            get() = when (paramType) {
+                "stable" -> "== (structural)"
+                "unstable", "lambda" -> "=== (referential)"
+                else -> "—"
+            }
+
         val changeFrequency: String
             get() = when (stability) {
                 "DIFFERENT" -> "Every recomposition"
@@ -223,6 +256,9 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
                 "UNCERTAIN" -> "Unknown"
                 else -> "Unknown"
             }
+
+        val advisory: String
+            get() = generateAdvisory(paramType, stability)
     }
 
     private data class CascadeNodeData(val fqn: String, val entry: ComposableEntry?) {
@@ -247,7 +283,7 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
     // --- Table model ---
 
     private inner class ParamTableModel : AbstractTableModel() {
-        private val columns = arrayOf("Param", "Stability", "Last State", "Change Frequency")
+        private val columns = arrayOf("Param", "Type", "Equality", "Last State", "Change Frequency", "Advisory")
 
         override fun getRowCount(): Int = paramEntries.size
         override fun getColumnCount(): Int = columns.size
@@ -257,9 +293,11 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
             val row = paramEntries[rowIndex]
             return when (columnIndex) {
                 0 -> row.paramName
-                1 -> row.stability
-                2 -> row.stability // Last State mirrors stability from latest snapshot
-                3 -> row.changeFrequency
+                1 -> row.paramType.ifEmpty { "—" }
+                2 -> row.equalityCheck
+                3 -> row.stability
+                4 -> row.changeFrequency
+                5 -> row.advisory
                 else -> ""
             }
         }
@@ -279,15 +317,31 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
             if (modelRow < 0 || modelRow >= paramEntries.size) return component
 
             val entry = paramEntries[modelRow]
-            val stabilityColor = stabilityToColor(entry.stability)
 
-            // Color the stability and last-state columns
-            if (column == 1 || column == 2) {
-                component.foreground = stabilityColor
-                component.font = component.font.deriveFont(Font.BOLD)
-            } else {
-                component.foreground = table.foreground
-                component.font = component.font.deriveFont(Font.PLAIN)
+            when (column) {
+                1 -> {
+                    // Type column: green=stable, red=unstable, orange=lambda
+                    component.foreground = paramTypeToColor(entry.paramType)
+                    component.font = component.font.deriveFont(Font.BOLD)
+                }
+                3 -> {
+                    // Last State column
+                    component.foreground = stabilityToColor(entry.stability)
+                    component.font = component.font.deriveFont(Font.BOLD)
+                }
+                5 -> {
+                    // Advisory column: red if non-empty
+                    if (entry.advisory.isNotEmpty()) {
+                        component.foreground = JBColor(Color(200, 50, 50), Color(220, 80, 80))
+                    } else {
+                        component.foreground = table.foreground
+                    }
+                    component.font = component.font.deriveFont(Font.PLAIN)
+                }
+                else -> {
+                    component.foreground = table.foreground
+                    component.font = component.font.deriveFont(Font.PLAIN)
+                }
             }
 
             return component
@@ -322,6 +376,25 @@ class StabilityPanel(private val sessionStore: SessionStore) : JPanel(BorderLayo
             "SAME" -> JBColor(Color(60, 100, 200), Color(80, 130, 220))          // blue
             "UNCERTAIN" -> JBColor(Color(140, 140, 140), Color(160, 160, 160))   // gray
             else -> JBColor(Color(140, 140, 140), Color(160, 160, 160))
+        }
+
+        fun paramTypeToColor(paramType: String): Color = when (paramType.lowercase()) {
+            "stable" -> JBColor(Color(60, 160, 60), Color(80, 180, 80))          // green
+            "unstable" -> JBColor(Color(200, 50, 50), Color(220, 80, 80))        // red
+            "lambda" -> JBColor(Color(200, 140, 30), Color(220, 160, 50))        // orange
+            else -> JBColor(Color(140, 140, 140), Color(160, 160, 160))          // gray
+        }
+
+        fun generateAdvisory(paramType: String, stability: String): String = when {
+            paramType == "unstable" && stability == "DIFFERENT" ->
+                "Fails === check. New instance each recomposition. Consider @Stable or remember."
+            paramType == "lambda" && stability == "DIFFERENT" ->
+                "Lambda re-allocated. Use remember { } or move to stable scope."
+            paramType == "lambda" && stability == "UNCERTAIN" ->
+                "Lambda stability unknown. May fail === if not remembered."
+            paramType == "unstable" && stability == "UNCERTAIN" ->
+                "Unstable type. Likely fails === on recomposition."
+            else -> ""
         }
     }
 }

@@ -64,20 +64,23 @@ configure<PublishingExtension> {
 }
 
 // Per-publication empty javadoc JAR (required by Maven Central, empty stub is fine for Kotlin)
-// Pattern from Lumen: create a unique task per publication to avoid naming collisions
-configure<PublishingExtension> {
-    publications.withType<MavenPublication>().configureEach {
-        val publicationName = name
-        val javadocJar = tasks.register("${publicationName}JavadocJar", Jar::class) {
-            archiveClassifier.set("javadoc")
-            archiveAppendix.set(publicationName)
+// Skip for java-gradle-plugin projects — they already have javadoc JARs
+if (!plugins.hasPlugin("java-gradle-plugin")) {
+    configure<PublishingExtension> {
+        publications.withType<MavenPublication>().configureEach {
+            val publicationName = name
+            val javadocJar = tasks.register("${publicationName}JavadocJar", Jar::class) {
+                archiveClassifier.set("javadoc")
+                archiveAppendix.set(publicationName)
+            }
+            artifact(javadocJar)
         }
-        artifact(javadocJar)
     }
 }
 
 // Ensure sources JAR exists for JVM-only modules (KMP auto-generates per-target sources)
-if (plugins.hasPlugin("org.jetbrains.kotlin.jvm") && tasks.findByName("sourcesJar") == null) {
+// Skip for java-gradle-plugin projects — they already have sources JARs in their publications
+if (plugins.hasPlugin("org.jetbrains.kotlin.jvm") && !plugins.hasPlugin("java-gradle-plugin") && tasks.findByName("sourcesJar") == null) {
     val sourcesJar = tasks.register("sourcesJar", Jar::class.java) {
         archiveClassifier.set("sources")
         from(project.the<SourceSetContainer>()["main"].allSource)

@@ -5,6 +5,10 @@ import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 class ReboundGradlePlugin : Plugin<Project> {
+    companion object {
+        val PLUGIN_VERSION: String = REBOUND_VERSION
+    }
+
     override fun apply(target: Project) {
         val extension = target.extensions.create("rebound", ReboundExtension::class.java)
 
@@ -49,7 +53,7 @@ class ReboundGradlePlugin : Plugin<Project> {
                 }
                 target.dependencies.project(mapOf("path" to projectPath))
             } catch (_: Exception) {
-                target.dependencies.create("io.github.aldefy.rebound:$compilerArtifactId:0.1.0")
+                target.dependencies.create("io.github.aldefy.rebound:$compilerArtifactId:$PLUGIN_VERSION")
             }
 
             val configs = target.configurations
@@ -76,7 +80,7 @@ class ReboundGradlePlugin : Plugin<Project> {
 
             // Auto-add runtime dependency
             // For KMP projects, add to commonMainImplementation; for Android-only, use debugImplementation
-            val runtimeDep = target.dependencies.create("io.github.aldefy.rebound:rebound-runtime:0.1.0")
+            val runtimeDep = target.dependencies.create("io.github.aldefy.rebound:rebound-runtime:$PLUGIN_VERSION")
             val isKmp = target.extensions.findByName("kotlin")?.javaClass?.name
                 ?.contains("KotlinMultiplatformExtension") == true
             val runtimeConfig = if (isKmp) {
