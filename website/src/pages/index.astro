@@ -1,5 +1,6 @@
 ---
-const base = import.meta.env.BASE_URL;
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 ---
 <!DOCTYPE html>
 <html lang="en" class="dark">
@@ -40,6 +41,28 @@ const base = import.meta.env.BASE_URL;
   <style is:inline>
     body { background-color: #0F0D1A; color: #e2e8f0; }
     html:not(.dark) body { background-color: #ffffff; color: #1e293b; }
+    .ss-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      color: #64748b;
+      background: none;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .ss-tab:hover { color: #334155; }
+    .dark .ss-tab { color: #94a3b8; }
+    .dark .ss-tab:hover { color: #e2e8f0; }
+    .ss-tab.tab-active {
+      color: #4F46E5;
+      border-bottom-color: #4F46E5;
+    }
+    .dark .ss-tab.tab-active {
+      color: #6366F1;
+      border-bottom-color: #6366F1;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -85,9 +108,81 @@ const base = import.meta.env.BASE_URL;
           <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] bg-slate-50 dark:bg-[#1A1730] overflow-hidden">
             <div class="px-4 py-2 border-b border-slate-200 dark:border-[#2D2B42] text-xs text-slate-500 font-mono">build.gradle.kts</div>
             <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.1"
 &#125;</code></pre>
           </div>
+        </div>
+        <div class="mt-4 flex justify-center items-center gap-3 flex-wrap">
+          <a href="https://central.sonatype.com/artifact/io.github.aldefy.rebound/rebound-runtime" target="_blank">
+            <img src={"https://img.shields.io/maven-central/v/io.github.aldefy.rebound/rebound-runtime?style=flat&color=4F46E5&label=Maven%20Central"} alt="Maven Central" />
+          </a>
+          <img src={"https://img.shields.io/badge/License-Apache%202.0-14B8A6?style=flat"} alt="License" />
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-[#6366F1] border border-brand-indigo/20 dark:border-brand-indigo/30">v0.2.1</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Video -->
+    <section class="py-16">
+      <div class="max-w-5xl mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-8">See it in action</h2>
+        <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] overflow-hidden bg-black">
+          <video controls muted playsinline preload="auto" class="w-full">
+            <source src={`${base}media/rebound-ide-demo.mp4`} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <!-- IDE Screenshots — Tabbed Viewer -->
+    <section class="py-16 bg-slate-50 dark:bg-[#1A1730]/50">
+      <div class="max-w-6xl mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-4">Five-tab IDE cockpit</h2>
+        <p class="text-center text-slate-600 dark:text-slate-400 mb-10">Live monitoring, hot spots, timeline heatmap, stability analysis, and session history — all inside Android Studio.</p>
+        <!-- Tab bar -->
+        <div class="flex justify-center overflow-x-auto gap-1 mb-6 border-b border-slate-200 dark:border-[#2D2B42]" id="ss-tabs">
+          <button class="ss-tab tab-active" data-tab="monitor">Monitor</button>
+          <button class="ss-tab" data-tab="hotspots">Hot Spots</button>
+          <button class="ss-tab" data-tab="timeline">Timeline</button>
+          <button class="ss-tab" data-tab="stability">Stability</button>
+          <button class="ss-tab" data-tab="history">History</button>
+        </div>
+        <!-- Tab panels -->
+        <div id="panel-monitor" class="ss-panel">
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Monitor</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Live recomposition tree with per-node detail panel showing rate, budget, skip%, and peak values. Sparkline chart visualizes trends over time. Color-coded violation indicators and a real-time event log keep you informed as you interact with the app.</p>
+          </div>
+          <img src={`${base}media/tab-monitor.png`} alt="Rebound Monitor tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+        </div>
+        <div id="panel-hotspots" class="ss-panel hidden">
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Hot Spots</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Sortable table ranked by severity. A summary bar shows the breakdown of violations, near-budget, and OK composables. Color-coded status and a ratio column showing budget multiplier help you triage quickly.</p>
+          </div>
+          <img src={`${base}media/tab-hotspots.png`} alt="Rebound Hot Spots tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+        </div>
+        <div id="panel-timeline" class="ss-panel hidden">
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Timeline</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Heatmap visualization — Y-axis lists composables sorted by peak rate, X-axis shows time. Cells are color-coded green, yellow, or red relative to each composable's budget, making spikes instantly visible.</p>
+          </div>
+          <img src={`${base}media/tab-timeline.png`} alt="Rebound Timeline tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+        </div>
+        <div id="panel-stability" class="ss-panel hidden">
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Stability</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Per-parameter table with type, equality check, last state, change frequency, and advisory columns. A Strong Skipping Mode banner highlights when skip rate is low. Cascade tree shows parent-to-child recomposition propagation paths.</p>
+          </div>
+          <img src={`${base}media/tab-stability.png`} alt="Rebound Stability tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+        </div>
+        <div id="panel-history" class="ss-panel hidden">
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">History</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Session list with save and diff support. Select any two sessions for a side-by-side comparison table with regression detection and delta highlighting so you can see exactly what changed between runs.</p>
+          </div>
+          <img src={`${base}media/tab-history.png`} alt="Rebound History tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
         </div>
       </div>
     </section>
@@ -189,6 +284,11 @@ const base = import.meta.env.BASE_URL;
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
               Five-tab Android Studio tool window: live monitor with sparklines, hot spot ranking, timeline heatmap, parameter stability matrix, and session history with VCS correlation.
             </p>
+            <p class="mt-3 text-sm">
+              <a href={`${base}ide-plugin/installation/`} class="text-brand-indigo dark:text-[#6366F1] hover:underline font-medium">Install the IDE plugin &rarr;</a>
+              <span class="text-slate-400 mx-1">&middot;</span>
+              <a href={`${base}roadmap/`} class="text-slate-500 dark:text-slate-400 hover:underline text-xs">JetBrains Marketplace listing planned</a>
+            </p>
           </div>
         </div>
       </div>
@@ -279,7 +379,7 @@ const base = import.meta.env.BASE_URL;
               <h3 class="font-semibold text-slate-900 dark:text-white">Apply the Gradle plugin</h3>
               <div class="mt-2 rounded-lg border border-slate-200 dark:border-[#2D2B42] bg-white dark:bg-[#1A1730] overflow-hidden">
                 <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.1"
 &#125;</code></pre>
               </div>
             </div>
@@ -318,6 +418,28 @@ const base = import.meta.env.BASE_URL;
         </div>
       </div>
     </section>
+
+    <!-- Sample Apps -->
+    <section class="py-12">
+      <div class="max-w-4xl mx-auto px-4">
+        <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] bg-white dark:bg-[#1A1730] p-6 flex flex-col md:flex-row gap-6 items-start">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Try it on a real app</h3>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              The <code class="text-xs bg-slate-100 dark:bg-[#0F0D1A] px-1 py-0.5 rounded">sample/</code> module in this repo is a quick-start Compose app with Rebound pre-configured. For a more interesting stress test, try <strong>StickerExplode</strong> — a particle-effect demo with heavy animation that exercises every budget class.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <a href="https://github.com/aldefy/compose-rebound/tree/master/sample" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2B42] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0F0D1A] transition-colors">
+                <span>sample/ module</span>
+              </a>
+              <a href="https://github.com/aldefy/StickerExplode" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2B42] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0F0D1A] transition-colors">
+                <span>StickerExplode</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Footer -->
@@ -342,6 +464,19 @@ const base = import.meta.env.BASE_URL;
     } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
       document.documentElement.classList.remove('dark');
     }
+
+    // Screenshot tab switcher
+    document.getElementById('ss-tabs').addEventListener('click', function(e) {
+      var btn = e.target.closest('.ss-tab');
+      if (!btn) return;
+      var tab = btn.getAttribute('data-tab');
+      // Update active tab
+      this.querySelectorAll('.ss-tab').forEach(function(b) { b.classList.remove('tab-active'); });
+      btn.classList.add('tab-active');
+      // Toggle panels
+      document.querySelectorAll('.ss-panel').forEach(function(p) { p.classList.add('hidden'); });
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+    });
   </script>
 </body>
 </html>
