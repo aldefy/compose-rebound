@@ -1,5 +1,7 @@
 # Rebound
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.aldefy.rebound/rebound-runtime?style=flat&logo=apachemaven&label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.aldefy.rebound/rebound-runtime)
+[![GitHub tag](https://img.shields.io/github/v/tag/aldefy/compose-rebound?style=flat&logo=github&label=Release)](https://github.com/aldefy/compose-rebound/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.x%E2%80%932.3.x-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
@@ -42,7 +44,7 @@ pluginManagement {
 ```kotlin
 // build.gradle.kts (app module)
 plugins {
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.1"
 }
 ```
 
