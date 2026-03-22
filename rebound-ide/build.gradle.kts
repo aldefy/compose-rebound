@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.aldefy.rebound"
-version = "0.2.0"
+version = project.property("rebound_version") as String
 
 repositories {
     mavenCentral()
