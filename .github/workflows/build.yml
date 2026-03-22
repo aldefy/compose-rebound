@@ -6,40 +6,119 @@ on:
   pull_request:
     branches: [master, main]
 
+env:
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dkotlin.incremental=false
+
 jobs:
-  build:
+  build-runtime:
+    name: Build · runtime (KMP)
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache Kotlin/Native compiler
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+      - name: Build runtime
+        run: ./gradlew :rebound-runtime:build
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+  build-compiler:
+    name: Build · compiler
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build compiler
+        run: ./gradlew :rebound-compiler:build
 
-      - name: Build main modules
-        run: ./gradlew build
-
+  build-ide:
+    name: Build · IDE plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
       - name: Build IDE plugin
         run: ./gradlew :rebound-ide:buildPlugin
-
-      - name: Validate Gradle plugin
-        run: ./gradlew :rebound-gradle:validatePlugins
-
-      - name: Build compiler-k2 (Kotlin 2.2)
-        working-directory: rebound-compiler-k2
-        run: ./gradlew build
-
-      - name: Build compiler-k2-3 (Kotlin 2.3)
-        working-directory: rebound-compiler-k2-3
-        run: ./gradlew build
-
       - name: Upload IDE plugin artifact
         uses: actions/upload-artifact@v4
         with:
           name: rebound-ide-plugin
           path: rebound-ide/build/distributions/*.zip
+
+  build-gradle-plugin:
+    name: Build · Gradle plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and validate Gradle plugin
+        working-directory: rebound-gradle
+        run: ./gradlew build validatePlugins
+
+  build-compiler-k2:
+    name: Build · compiler-k2 (Kotlin 2.2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build compiler-k2
+        working-directory: rebound-compiler-k2
+        run: ./gradlew build
+
+  build-compiler-k2-3:
+    name: Build · compiler-k2-3 (Kotlin 2.3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build compiler-k2-3
+        working-directory: rebound-compiler-k2-3
+        run: ./gradlew build
+
+  verify:
+    name: CI ✓
+    needs:
+      - build-runtime
+      - build-compiler
+      - build-ide
+      - build-gradle-plugin
+      - build-compiler-k2
+      - build-compiler-k2-3
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All parallel builds passed"
