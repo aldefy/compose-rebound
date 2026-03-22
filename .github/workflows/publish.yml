@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+*"   # e.g. 0.1.0, 0.2.0-beta01
+      - "[0-9]+.[0-9]+.[0-9]+*"   # e.g. 0.2.2, 0.3.0-beta01
 
 concurrency:
   group: release-${{ github.ref }}
@@ -18,13 +18,12 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: macos-latest
-    timeout-minutes: 45
-
+  preflight:
+    name: Preflight · verify tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
       - name: Verify tag matches gradle.properties version
         run: |
           TAG=${GITHUB_REF#refs/tags/}
@@ -35,97 +34,212 @@ jobs:
           fi
           echo "Version check passed: $TAG"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+  stage-runtime:
+    name: Stage · runtime (KMP)
+    needs: [preflight]
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
+      - uses: gradle/actions/setup-gradle@v4
       - name: Cache Kotlin/Native compiler
         uses: actions/cache@v4
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
           restore-keys: konan-${{ runner.os }}-
-
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      # Main modules: runtime, compiler, gradle plugin
-      - name: Publish main modules to local staging
+      - name: Publish runtime to local staging
         run: |
-          ./gradlew publishAllPublicationsToLocalStagingRepository \
+          ./gradlew :rebound-runtime:publishAllPublicationsToLocalStagingRepository \
             -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
             -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-runtime
+          path: rebound-runtime/build/staging-deploy/
 
-      # Gradle plugin (separate composite build — includeBuild is excluded from root publishAll)
-      - name: Publish gradle plugin to local staging
+  stage-compiler:
+    name: Stage · compiler
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Publish compiler to local staging
+        run: |
+          ./gradlew :rebound-compiler:publishAllPublicationsToLocalStagingRepository \
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-compiler
+          path: rebound-compiler/build/staging-deploy/
+
+  stage-gradle-plugin:
+    name: Stage · Gradle plugin
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Publish Gradle plugin to local staging
         working-directory: rebound-gradle
         run: |
           ./gradlew publishAllPublicationsToLocalStagingRepository \
             -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
             -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-gradle-plugin
+          path: rebound-gradle/build/staging-deploy/
 
-      # Compiler plugin for Kotlin 2.2.x (separate composite build)
+  stage-compiler-k2:
+    name: Stage · compiler-k2 (Kotlin 2.2)
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Publish compiler-k2 to local staging
         working-directory: rebound-compiler-k2
         run: |
           ./gradlew publishAllPublicationsToLocalStagingRepository \
             -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
             -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-compiler-k2
+          path: rebound-compiler-k2/build/staging-deploy/
 
-      # Compiler plugin for Kotlin 2.3.x (separate composite build)
+  stage-compiler-k2-3:
+    name: Stage · compiler-k2-3 (Kotlin 2.3)
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Publish compiler-k2-3 to local staging
         working-directory: rebound-compiler-k2-3
         run: |
           ./gradlew publishAllPublicationsToLocalStagingRepository \
             -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
             -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-compiler-k2-3
+          path: rebound-compiler-k2-3/build/staging-deploy/
 
-      - name: Verify publications
-        run: |
-          echo "=== Main modules ==="
-          find rebound-compiler/build/staging-deploy rebound-runtime/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
-          echo "=== Gradle plugin ==="
-          find rebound-gradle/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
-          echo "=== Compiler K2 ==="
-          find rebound-compiler-k2/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
-          echo "=== Compiler K2-3 ==="
-          find rebound-compiler-k2-3/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
-
-      - name: Create bundle zip
+  bundle:
+    name: Bundle · merge staging → zip
+    needs:
+      - stage-runtime
+      - stage-compiler
+      - stage-gradle-plugin
+      - stage-compiler-k2
+      - stage-compiler-k2-3
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download all staging artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: staging-*
+      - name: Merge and zip
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          mkdir -p bundle
-
-          # Merge all staging-deploy directories
-          for dir in rebound-compiler rebound-runtime rebound-gradle; do
-            if [ -d "$dir/build/staging-deploy/io" ]; then
-              rsync -a "$dir/build/staging-deploy/io/" bundle/io/
-            fi
-          done
-          rsync -a rebound-compiler-k2/build/staging-deploy/io/ bundle/io/
-          rsync -a rebound-compiler-k2-3/build/staging-deploy/io/ bundle/io/
-
+          mkdir -p bundle/io
+          # Each artifact downloads to staging-<name>/io/...
+          rsync -a staging-runtime/io/        bundle/io/
+          rsync -a staging-compiler/io/       bundle/io/
+          rsync -a staging-gradle-plugin/io/  bundle/io/
+          rsync -a staging-compiler-k2/io/    bundle/io/
+          rsync -a staging-compiler-k2-3/io/  bundle/io/
           cd bundle
           zip -r "$GITHUB_WORKSPACE/rebound-${TAG}-bundle.zip" io/
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: rebound-*-bundle.zip
 
+  release:
+    name: Release · create GitHub release
+    needs: [bundle]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Download bundle zip
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
       - name: Build IDE plugin
         run: ./gradlew :rebound-ide:buildPlugin
-
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           IDE_ZIP=$(find rebound-ide/build/distributions -name "*.zip" | head -1)
-
           gh release create "$TAG" \
             "rebound-${TAG}-bundle.zip" \
             "$IDE_ZIP" \
