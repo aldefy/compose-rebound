@@ -64,6 +64,14 @@ jobs:
             -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
             -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
 
+      # Gradle plugin (separate composite build — includeBuild is excluded from root publishAll)
+      - name: Publish gradle plugin to local staging
+        working-directory: rebound-gradle
+        run: |
+          ./gradlew publishAllPublicationsToLocalStagingRepository \
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} \
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+
       # Compiler plugin for Kotlin 2.2.x (separate composite build)
       - name: Publish compiler-k2 to local staging
         working-directory: rebound-compiler-k2
@@ -83,7 +91,9 @@ jobs:
       - name: Verify publications
         run: |
           echo "=== Main modules ==="
-          find rebound-compiler/build/staging-deploy rebound-runtime/build/staging-deploy rebound-gradle/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
+          find rebound-compiler/build/staging-deploy rebound-runtime/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
+          echo "=== Gradle plugin ==="
+          find rebound-gradle/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
           echo "=== Compiler K2 ==="
           find rebound-compiler-k2/build/staging-deploy -mindepth 4 -maxdepth 4 -type d 2>/dev/null | sort
           echo "=== Compiler K2-3 ==="
