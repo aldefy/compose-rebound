@@ -86,12 +86,12 @@ Each stage job uploads its `<module>/build/staging-deploy/` as a GitHub Actions 
 
 Steps:
 1. Download all 5 staging artifacts (each downloaded to its module path)
-2. Merge into `bundle/io/` via explicit rsync of these 5 paths:
-   - `rebound-runtime/build/staging-deploy/io/`
-   - `rebound-compiler/build/staging-deploy/io/`
-   - `rebound-gradle/build/staging-deploy/io/`
-   - `rebound-compiler-k2/build/staging-deploy/io/`
-   - `rebound-compiler-k2-3/build/staging-deploy/io/`
+2. Merge into `bundle/io/` via explicit rsync of these 5 paths (each artifact named `staging-*` downloads to a directory of the same name via `download-artifact@v4`):
+   - `staging-runtime/io/`
+   - `staging-compiler/io/`
+   - `staging-gradle-plugin/io/`
+   - `staging-compiler-k2/io/`
+   - `staging-compiler-k2-3/io/`
    - Note: `rebound-ide` is intentionally excluded (not published to Maven Central)
 3. `zip -r rebound-${TAG}-bundle.zip bundle/io/`
 4. Upload bundle zip as artifact
