@@ -35,6 +35,9 @@ class ReboundGradlePlugin : Plugin<Project> {
         target.tasks.register("reboundDiff", ReboundDiffTask::class.java) {
             it.description = "Compare two saved Rebound snapshots and report regressions/improvements"
         }
+        target.tasks.register("reboundGate", ReboundGateTask::class.java) {
+            it.description = "CI budget gate: capture snapshot, diff against baseline, fail on regression"
+        }
 
         target.afterEvaluate {
             if (!extension.enabled.get()) return@afterEvaluate

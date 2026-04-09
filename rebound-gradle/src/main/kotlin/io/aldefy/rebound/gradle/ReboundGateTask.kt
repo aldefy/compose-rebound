@@ -3,20 +3,29 @@ package io.aldefy.rebound.gradle
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.net.Socket
+import java.text.SimpleDateFormat
+import java.util.Date
 
 /**
- * Compares two Rebound snapshot JSON files and reports regressions/improvements.
- * No device connection needed — works entirely offline.
+ * CI budget gate: capture a live snapshot, diff against a committed baseline, fail on regression.
  *
  * Usage:
- *   ./gradlew reboundDiff -Pbefore=.rebound/before.json -Pafter=.rebound/after.json
- *   ./gradlew reboundDiff -Pbefore=.rebound/before.json -Pafter=.rebound/after.json -Pthreshold=10
+ *   ./gradlew reboundGate -Pbaseline=.rebound/baseline.json
+ *   ./gradlew reboundGate -Pbaseline=.rebound/baseline.json -Pthreshold=10
+ *   ./gradlew reboundGate -Pbaseline=.rebound/baseline.json -Pport=19999
  *
- * Fails the build when regressions are detected (exit code 1 for CI).
- * Disable with -PfailOnRegression=false to print results without failing.
+ * The task:
+ *   1. Connects to the running app (adb forward auto-discovery)
+ *   2. Captures a snapshot to .rebound/gate-<timestamp>.json
+ *   3. Diffs against the baseline
+ *   4. Fails the build if any composable regressed beyond the threshold
  */
-abstract class ReboundDiffTask : DefaultTask() {
+abstract class ReboundGateTask : DefaultTask() {
 
     init {
         group = "rebound"
@@ -24,28 +33,57 @@ abstract class ReboundDiffTask : DefaultTask() {
 
     @TaskAction
     fun execute() {
-        val before = project.findProperty("before")?.toString() ?: ""
-        val after = project.findProperty("after")?.toString() ?: ""
-        val threshold = project.findProperty("threshold")?.toString()?.toIntOrNull() ?: 20
-
-        if (before.isEmpty() || after.isEmpty()) {
-            logger.error("Usage: ./gradlew reboundDiff -Pbefore=<file> -Pafter=<file> [-Pthreshold=20]")
-            return
+        val baselinePath = project.findProperty("baseline")?.toString()
+        if (baselinePath.isNullOrBlank()) {
+            throw GradleException(
+                "Usage: ./gradlew reboundGate -Pbaseline=.rebound/baseline.json\n" +
+                "  Create a baseline first: ./gradlew reboundSave -Ptag=baseline"
+            )
         }
 
-        val beforeFile = resolveFile(before)
-        val afterFile = resolveFile(after)
+        val baselineFile = resolveFile(baselinePath)
+        if (!baselineFile.exists()) {
+            throw GradleException(
+                "Baseline not found: $baselinePath\n" +
+                "  Create one: ./gradlew reboundSave -Ptag=baseline"
+            )
+        }
 
-        if (!beforeFile.exists()) { logger.error("File not found: $before"); return }
-        if (!afterFile.exists()) { logger.error("File not found: $after"); return }
+        val threshold = project.findProperty("threshold")?.toString()?.toIntOrNull() ?: 20
+        val port = project.findProperty("port")?.toString()?.toIntOrNull() ?: PORT
 
-        val beforeSnap = parseSnapshot(beforeFile.readText())
-        val afterSnap = parseSnapshot(afterFile.readText())
+        // Step 1: Connect
+        if (!connect(port)) {
+            throw GradleException(
+                "Rebound: no connection on port $port — is the app running with Rebound enabled?\n" +
+                "  Android: connect device/emulator, launch debug build\n" +
+                "  iOS sim: launch app in simulator"
+            )
+        }
 
-        if (beforeSnap.isEmpty()) { logger.error("No composables found in $before"); return }
-        if (afterSnap.isEmpty()) { logger.error("No composables found in $after"); return }
+        // Step 2: Capture snapshot
+        val json = sendCommand("snapshot", port)
+        if (json.isNullOrBlank()) {
+            throw GradleException("Rebound: empty snapshot response. Is the app running?")
+        }
 
-        val allKeys = (beforeSnap.keys + afterSnap.keys).sorted().distinct()
+        val outDir = File(project.projectDir, ".rebound")
+        outDir.mkdirs()
+        val ts = SimpleDateFormat("yyyyMMdd-HHmmss").format(Date())
+        val snapshotFile = File(outDir, "gate-$ts.json")
+        snapshotFile.writeText(json)
+
+        val count = "\"budgetClass\"".toRegex().findAll(json).count()
+        println("Captured $count composables to ${snapshotFile.relativeTo(project.projectDir)}")
+
+        // Step 3: Diff
+        val baselineSnap = parseSnapshot(baselineFile.readText())
+        val currentSnap = parseSnapshot(json)
+
+        if (baselineSnap.isEmpty()) throw GradleException("No composables found in baseline: $baselinePath")
+        if (currentSnap.isEmpty()) throw GradleException("No composables found in captured snapshot")
+
+        val allKeys = (baselineSnap.keys + currentSnap.keys).sorted().distinct()
 
         val improved = mutableListOf<DiffEntry>()
         val regressed = mutableListOf<DiffEntry>()
@@ -53,8 +91,8 @@ abstract class ReboundDiffTask : DefaultTask() {
         val removed = mutableListOf<String>()
 
         for (key in allKeys) {
-            val b = beforeSnap[key]
-            val a = afterSnap[key]
+            val b = baselineSnap[key]
+            val a = currentSnap[key]
             val short = if ("." in key) key.substringAfterLast(".") else key
 
             if (b != null && a == null) { removed.add(short); continue }
@@ -74,7 +112,7 @@ abstract class ReboundDiffTask : DefaultTask() {
 
             val pct = if (bPeak > 0) ((aPeak - bPeak) * 100) / bPeak else if (aPeak > 0) 100 else 0
 
-            val entry = DiffEntry(short, key, budgetClass, budget, bPeak, aPeak, pct,
+            val entry = DiffEntry(short, budgetClass, budget, bPeak, aPeak, pct,
                 bSkip, aSkip, bForced, aForced)
 
             if (pct < -threshold) improved.add(entry)
@@ -84,8 +122,10 @@ abstract class ReboundDiffTask : DefaultTask() {
         improved.sortBy { it.peakPct }
         regressed.sortByDescending { it.peakPct }
 
+        // Step 4: Report
         val sb = StringBuilder()
-        sb.appendLine("=== Rebound Diff: ${beforeFile.name} -> ${afterFile.name} (threshold: $threshold%) ===")
+        sb.appendLine()
+        sb.appendLine("=== Rebound Gate: ${baselineFile.name} -> gate-$ts.json (threshold: $threshold%) ===")
         sb.appendLine()
 
         if (regressed.isNotEmpty()) {
@@ -124,26 +164,20 @@ abstract class ReboundDiffTask : DefaultTask() {
             sb.appendLine()
         }
 
-        val totalAfter = afterSnap.size
+        val totalAfter = currentSnap.size
         val nRegressed = regressed.size
         val nImproved = improved.size
         val nUnchanged = totalAfter - nRegressed - nImproved - newComposables.size
+
         sb.appendLine("Summary: $totalAfter composables ($nImproved improved, $nRegressed regressed, $nUnchanged unchanged, ${newComposables.size} new, ${removed.size} removed)")
 
-        val failed = nRegressed > 0
-        if (!failed && nImproved > 0) {
-            sb.appendLine("Result: PASS")
-        } else if (failed) {
-            sb.appendLine("Result: FAIL — regressions detected")
+        if (nRegressed > 0) {
+            sb.appendLine("Result: FAIL")
+            println(sb.toString())
+            throw GradleException("Rebound: $nRegressed regression(s) exceeded $threshold% threshold — build failed")
         } else {
-            sb.appendLine("Result: PASS — no significant changes")
-        }
-
-        println(sb.toString())
-
-        val failOnRegression = project.findProperty("failOnRegression")?.toString()?.lowercase() != "false"
-        if (failed && failOnRegression) {
-            throw GradleException("Rebound: $nRegressed regression(s) detected (threshold: $threshold%)")
+            sb.appendLine("Result: PASS")
+            println(sb.toString())
         }
     }
 
@@ -157,7 +191,66 @@ abstract class ReboundDiffTask : DefaultTask() {
         return if (v >= 0) "+$s" else s
     }
 
-    /** Minimal JSON parser for Rebound snapshot format — no external dependencies. */
+    private fun connect(port: Int): Boolean {
+        if (sendCommand("ping", port)?.trim() == "pong") return true
+        return setupAdbForward(port)
+    }
+
+    private fun setupAdbForward(port: Int): Boolean {
+        if (tryAdbForward("rebound", port)) return true
+        val unixSockets = adb("shell", "cat /proc/net/unix 2>/dev/null") ?: return false
+        val pattern = Regex("@(rebound_\\d+)")
+        for (match in pattern.findAll(unixSockets)) {
+            if (tryAdbForward(match.groupValues[1], port)) return true
+        }
+        return false
+    }
+
+    private fun tryAdbForward(socketName: String, port: Int): Boolean {
+        adb("forward", "tcp:$port", "localabstract:$socketName") ?: return false
+        return sendCommand("ping", port)?.trim() == "pong"
+    }
+
+    private fun sendCommand(cmd: String, port: Int): String? {
+        return try {
+            Socket("localhost", port).use { socket ->
+                socket.soTimeout = 5000
+                val writer = OutputStreamWriter(socket.getOutputStream())
+                writer.write("$cmd\n")
+                writer.flush()
+                Thread.sleep(500)
+                socket.shutdownOutput()
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+                reader.readText()
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun adb(vararg args: String): String? {
+        return try {
+            val process = ProcessBuilder(listOf(findAdb()) + args.toList())
+                .redirectErrorStream(true).start()
+            val output = process.inputStream.bufferedReader().readText()
+            process.waitFor()
+            if (process.exitValue() == 0) output else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun findAdb(): String {
+        val androidHome = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+        if (androidHome != null) {
+            val adb = File(androidHome, "platform-tools/adb")
+            if (adb.exists()) return adb.absolutePath
+        }
+        val userAdb = File(System.getProperty("user.home"), "Library/Android/sdk/platform-tools/adb")
+        if (userAdb.exists()) return userAdb.absolutePath
+        return "adb"
+    }
+
     private fun parseSnapshot(json: String): Map<String, Map<String, Any>> {
         val result = mutableMapOf<String, Map<String, Any>>()
         val composablesBlock = json.substringAfter("\"composables\"")
@@ -181,14 +274,9 @@ abstract class ReboundDiffTask : DefaultTask() {
 
             fields["budgetClass"] = extractString("budgetClass")
             fields["budgetPerSecond"] = extractInt("budgetPerSecond")
-            fields["totalCompositions"] = extractLong("totalCompositions")
             fields["peakRate"] = extractInt("peakRate")
-            fields["currentRate"] = extractInt("currentRate")
-            fields["totalEnters"] = extractLong("totalEnters")
-            fields["skipCount"] = extractLong("skipCount")
             fields["skipRate"] = extractFloat("skipRate")
             fields["forcedCount"] = extractLong("forcedCount")
-            fields["paramDrivenCount"] = extractLong("paramDrivenCount")
 
             result[key] = fields
         }
@@ -197,7 +285,6 @@ abstract class ReboundDiffTask : DefaultTask() {
 
     private data class DiffEntry(
         val name: String,
-        val fqn: String,
         val budgetClass: String,
         val budget: Int,
         val beforePeak: Int,
@@ -208,4 +295,8 @@ abstract class ReboundDiffTask : DefaultTask() {
         val beforeForced: Long,
         val afterForced: Long,
     )
+
+    companion object {
+        const val PORT = 18462
+    }
 }

@@ -241,10 +241,13 @@ print(f"Summary: {total_a} composables ({n_improved} improved, {n_regressed} reg
 
 if n_regressed == 0 and n_improved > 0:
     print("Result: PASS")
+    sys.exit(0)
 elif n_regressed > 0:
     print("Result: FAIL — regressions detected")
+    sys.exit(1)
 else:
     print("Result: PASS — no significant changes")
+    sys.exit(0)
 PYEOF
 }
 
