@@ -5,6 +5,7 @@ build/
 local.properties
 .DS_Store
 .intellijPlatform/
+.rebound/
 docs/blog.md
 docs/plans/
 CLAUDE.md
