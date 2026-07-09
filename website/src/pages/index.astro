@@ -7,15 +7,15 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Compose recomposition budget monitor" />
-  <meta property="og:title" content="Rebound — Compose Recomposition Budget Monitor" />
-  <meta property="og:description" content="Budget-based recomposition monitoring for Jetpack Compose. A Screen at 3/s. An Animation at 120/s. Zero config. Debug builds only." />
+  <meta name="description" content="Catch recomposition regressions before they ship." />
+  <meta property="og:title" content="Rebound — Catch recomposition regressions before they ship" />
+  <meta property="og:description" content="Budget-based recomposition monitoring for Jetpack Compose and Compose Multiplatform, with CI gates, Android Studio feedback, and CLI checks." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://aldefy.github.io/compose-rebound/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Rebound — Compose Recomposition Budget Monitor" />
-  <meta name="twitter:description" content="Budget-based recomposition monitoring for Jetpack Compose." />
-  <title>Rebound — Compose Recomposition Budget Monitor</title>
+  <meta name="twitter:title" content="Rebound — Catch recomposition regressions before they ship" />
+  <meta name="twitter:description" content="Budget-based recomposition monitoring for Jetpack Compose and Compose Multiplatform." />
+  <title>Rebound — Catch recomposition regressions before they ship</title>
   <link rel="icon" type="image/x-icon" href={`${base}favicon.ico`} />
   <script src="https://cdn.tailwindcss.com" is:inline></script>
   <script is:inline>
@@ -25,13 +25,13 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
         extend: {
           colors: {
             brand: {
-              indigo: '#4F46E5',
-              'indigo-light': '#6366F1',
-              teal: '#14B8A6',
-              'teal-light': '#2DD4BF',
-              dark: '#0F0D1A',
-              'dark-card': '#1A1730',
-              'dark-border': '#2D2B42',
+              indigo: '#0891B2',
+              'indigo-light': '#22D3EE',
+              teal: '#0891B2',
+              'teal-light': '#67E8F9',
+              dark: '#0B0F14',
+              'dark-card': '#121A23',
+              'dark-border': '#263241',
             },
           },
         },
@@ -39,7 +39,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     }
   </script>
   <style is:inline>
-    body { background-color: #0F0D1A; color: #e2e8f0; }
+    body { background-color: #0B0F14; color: #e2e8f0; }
     html:not(.dark) body { background-color: #ffffff; color: #1e293b; }
     .ss-tab {
       padding: 0.5rem 1rem;
@@ -56,25 +56,25 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     .dark .ss-tab { color: #94a3b8; }
     .dark .ss-tab:hover { color: #e2e8f0; }
     .ss-tab.tab-active {
-      color: #4F46E5;
-      border-bottom-color: #4F46E5;
+      color: #0891B2;
+      border-bottom-color: #0891B2;
     }
     .dark .ss-tab.tab-active {
-      color: #6366F1;
-      border-bottom-color: #6366F1;
+      color: #22D3EE;
+      border-bottom-color: #22D3EE;
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
   <!-- Navbar -->
-  <nav class="sticky top-0 z-50 border-b border-slate-200 dark:border-[#2D2B42] bg-white/80 dark:bg-[#0F0D1A]/80 backdrop-blur-sm">
+  <nav class="sticky top-0 z-50 border-b border-slate-200 dark:border-[#263241] bg-white/80 dark:bg-[#0B0F14]/80 backdrop-blur-sm">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
       <a href={base} class="text-xl font-bold text-slate-900 dark:text-white">Rebound</a>
       <div class="flex items-center gap-6">
         <a href={`${base}#features`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Features</a>
         <a href={`${base}#platforms`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Platforms</a>
         <a href={`${base}#get-started`} class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Get Started</a>
-        <a href={`${base}intro/`} class="text-sm font-medium text-brand-indigo dark:text-[#6366F1] hover:text-slate-900 dark:hover:text-white">Docs</a>
+        <a href={`${base}intro/`} class="text-sm font-medium text-brand-indigo dark:text-[#22D3EE] hover:text-slate-900 dark:hover:text-white">Docs</a>
         <a href="https://github.com/aldefy/compose-rebound" target="_blank" class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">GitHub</a>
       </div>
     </div>
@@ -83,41 +83,65 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
   <main class="flex-1">
     <!-- Hero -->
     <section class="relative overflow-hidden py-24 md:py-32">
-      <div class="max-w-6xl mx-auto px-4 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-slate-200 dark:border-[#2D2B42] text-sm text-slate-600 dark:text-slate-400">
-          <span class="w-2 h-2 rounded-full bg-green-500"></span>
-          Kotlin 2.0 — 2.3 &middot; Android + iOS
-        </div>
-        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Catch runaway recompositions<br/>
-          <span class="text-brand-indigo dark:text-[#6366F1]">before they ship</span>
-        </h1>
-        <p class="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Budget-based recomposition monitoring for Jetpack Compose.
-          A Screen at 3/s. An Animation at 120/s. Zero config. Debug builds only.
-        </p>
-        <div class="mt-8 flex justify-center gap-4">
-          <a href={`${base}intro/`} class="px-6 py-3 rounded-lg bg-brand-indigo hover:bg-[#6366F1] text-white font-medium transition-colors">
-            Get Started
-          </a>
-          <a href="https://github.com/aldefy/compose-rebound" target="_blank" class="px-6 py-3 rounded-lg border border-slate-300 dark:border-[#2D2B42] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1A1730] font-medium transition-colors">
-            View on GitHub
-          </a>
-        </div>
-        <div class="mt-12 max-w-lg mx-auto text-left">
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] bg-slate-50 dark:bg-[#1A1730] overflow-hidden">
-            <div class="px-4 py-2 border-b border-slate-200 dark:border-[#2D2B42] text-xs text-slate-500 font-mono">build.gradle.kts</div>
-            <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
-    id("io.github.aldefy.rebound") version "0.2.1"
-&#125;</code></pre>
+      <div class="max-w-6xl mx-auto px-4 grid gap-12 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
+        <div class="text-left">
+          <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-slate-200 dark:border-[#263241] text-sm text-slate-600 dark:text-slate-400 bg-white/70 dark:bg-[#121A23]/70">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            Kotlin 2.0 — 2.3 &middot; Android + iOS
+          </div>
+          <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white max-w-2xl">
+            Catch recomposition regressions<br/>
+            <span class="text-brand-indigo dark:text-[#22D3EE]">before they ship</span>
+          </h1>
+          <p class="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl">
+            Rebound instruments Compose at compile time, watches recomposition rates at runtime, and surfaces the result in CI, Android Studio, or the CLI.
+            It is built for teams that want a budget signal, not another profiler window.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href={`${base}intro/`} class="px-6 py-3 rounded-lg bg-brand-indigo hover:bg-[#22D3EE] text-white font-medium transition-colors">
+              Get Started
+            </a>
+            <a href="https://github.com/aldefy/compose-rebound" target="_blank" class="px-6 py-3 rounded-lg border border-slate-300 dark:border-[#263241] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#121A23] font-medium transition-colors">
+              View on GitHub
+            </a>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 dark:border-[#263241] bg-white/70 dark:bg-[#121A23]/70">CI guardrail</span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 dark:border-[#263241] bg-white/70 dark:bg-[#121A23]/70">IDE feedback</span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 dark:border-[#263241] bg-white/70 dark:bg-[#121A23]/70">Fast local checks</span>
           </div>
         </div>
-        <div class="mt-4 flex justify-center items-center gap-3 flex-wrap">
-          <a href="https://central.sonatype.com/artifact/io.github.aldefy.rebound/rebound-runtime" target="_blank">
-            <img src={"https://img.shields.io/maven-central/v/io.github.aldefy.rebound/rebound-runtime?style=flat&color=4F46E5&label=Maven%20Central"} alt="Maven Central" />
-          </a>
-          <img src={"https://img.shields.io/badge/License-Apache%202.0-14B8A6?style=flat"} alt="License" />
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-[#6366F1] border border-brand-indigo/20 dark:border-brand-indigo/30">v0.2.1</span>
+        <div class="space-y-4">
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] bg-slate-50 dark:bg-[#121A23] overflow-hidden">
+            <div class="px-4 py-2 border-b border-slate-200 dark:border-[#263241] text-xs text-slate-500 font-mono">build.gradle.kts</div>
+            <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
+  id("io.github.aldefy.rebound") version "0.2.2"
+&#125;</code></pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] bg-white dark:bg-[#121A23] p-4">
+            <div class="text-sm font-semibold text-slate-900 dark:text-white">What you get</div>
+            <div class="mt-3 space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <div class="flex items-center justify-between gap-4">
+                <span>CI gate</span>
+                <span class="font-mono text-slate-900 dark:text-white">reboundGate</span>
+              </div>
+              <div class="flex items-center justify-between gap-4">
+                <span>IDE surfaces</span>
+                <span class="font-mono text-slate-900 dark:text-white">Monitor / Hot Spots / Timeline</span>
+              </div>
+              <div class="flex items-center justify-between gap-4">
+                <span>CLI checks</span>
+                <span class="font-mono text-slate-900 dark:text-white">snapshot / summary / watch</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <a href="https://central.sonatype.com/artifact/io.github.aldefy.rebound/rebound-runtime" target="_blank">
+              <img src={"https://img.shields.io/maven-central/v/io.github.aldefy.rebound/rebound-runtime?style=flat&color=0891B2&label=Maven%20Central"} alt="Maven Central" />
+            </a>
+            <img src={"https://img.shields.io/badge/License-Apache%202.0-0891B2?style=flat"} alt="License" />
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-[#22D3EE] border border-brand-indigo/20 dark:border-brand-indigo/30">v0.2.2</span>
+          </div>
         </div>
       </div>
     </section>
@@ -125,8 +149,8 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     <!-- Demo Video -->
     <section class="py-16">
       <div class="max-w-5xl mx-auto px-4">
-        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-8">See it in action</h2>
-        <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] overflow-hidden bg-black">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-8">Product preview</h2>
+        <div class="rounded-xl border border-slate-200 dark:border-[#263241] overflow-hidden bg-black">
           <video controls muted playsinline preload="auto" class="w-full">
             <source src={`${base}media/rebound-ide-demo.mp4`} type="video/mp4" />
             Your browser does not support the video tag.
@@ -136,12 +160,12 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     </section>
 
     <!-- IDE Screenshots — Tabbed Viewer -->
-    <section class="py-16 bg-slate-50 dark:bg-[#1A1730]/50">
+    <section class="py-16 bg-slate-50 dark:bg-[#121A23]/50">
       <div class="max-w-6xl mx-auto px-4">
-        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-4">Five-tab IDE cockpit</h2>
-        <p class="text-center text-slate-600 dark:text-slate-400 mb-10">Live monitoring, hot spots, timeline heatmap, stability analysis, and session history — all inside Android Studio.</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-900 dark:text-white mb-4">Android Studio surfaces</h2>
+        <p class="text-center text-slate-600 dark:text-slate-400 mb-10">Live monitoring, hot spots, timeline heatmap, stability analysis, and session history — without leaving the editor.</p>
         <!-- Tab bar -->
-        <div class="flex justify-center overflow-x-auto gap-1 mb-6 border-b border-slate-200 dark:border-[#2D2B42]" id="ss-tabs">
+        <div class="flex justify-center overflow-x-auto gap-1 mb-6 border-b border-slate-200 dark:border-[#263241]" id="ss-tabs">
           <button class="ss-tab tab-active" data-tab="monitor">Monitor</button>
           <button class="ss-tab" data-tab="hotspots">Hot Spots</button>
           <button class="ss-tab" data-tab="timeline">Timeline</button>
@@ -154,53 +178,53 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Monitor</h3>
             <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Live recomposition tree with per-node detail panel showing rate, budget, skip%, and peak values. Sparkline chart visualizes trends over time. Color-coded violation indicators and a real-time event log keep you informed as you interact with the app.</p>
           </div>
-          <img src={`${base}media/tab-monitor.png`} alt="Rebound Monitor tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+          <img src={`${base}media/tab-monitor.png`} alt="Rebound Monitor tab" class="rounded-lg border border-slate-200 dark:border-[#263241] w-full" loading="lazy" />
         </div>
         <div id="panel-hotspots" class="ss-panel hidden">
           <div class="mb-4">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Hot Spots</h3>
             <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Sortable table ranked by severity. A summary bar shows the breakdown of violations, near-budget, and OK composables. Color-coded status and a ratio column showing budget multiplier help you triage quickly.</p>
           </div>
-          <img src={`${base}media/tab-hotspots.png`} alt="Rebound Hot Spots tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+          <img src={`${base}media/tab-hotspots.png`} alt="Rebound Hot Spots tab" class="rounded-lg border border-slate-200 dark:border-[#263241] w-full" loading="lazy" />
         </div>
         <div id="panel-timeline" class="ss-panel hidden">
           <div class="mb-4">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Timeline</h3>
             <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Heatmap visualization — Y-axis lists composables sorted by peak rate, X-axis shows time. Cells are color-coded green, yellow, or red relative to each composable's budget, making spikes instantly visible.</p>
           </div>
-          <img src={`${base}media/tab-timeline.png`} alt="Rebound Timeline tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+          <img src={`${base}media/tab-timeline.png`} alt="Rebound Timeline tab" class="rounded-lg border border-slate-200 dark:border-[#263241] w-full" loading="lazy" />
         </div>
         <div id="panel-stability" class="ss-panel hidden">
           <div class="mb-4">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Stability</h3>
             <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Per-parameter table with type, equality check, last state, change frequency, and advisory columns. A Strong Skipping Mode banner highlights when skip rate is low. Cascade tree shows parent-to-child recomposition propagation paths.</p>
           </div>
-          <img src={`${base}media/tab-stability.png`} alt="Rebound Stability tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+          <img src={`${base}media/tab-stability.png`} alt="Rebound Stability tab" class="rounded-lg border border-slate-200 dark:border-[#263241] w-full" loading="lazy" />
         </div>
         <div id="panel-history" class="ss-panel hidden">
           <div class="mb-4">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">History</h3>
             <p class="text-base text-slate-600 dark:text-slate-400 max-w-3xl">Session list with save and diff support. Select any two sessions for a side-by-side comparison table with regression detection and delta highlighting so you can see exactly what changed between runs.</p>
           </div>
-          <img src={`${base}media/tab-history.png`} alt="Rebound History tab" class="rounded-lg border border-slate-200 dark:border-[#2D2B42] w-full" loading="lazy" />
+          <img src={`${base}media/tab-history.png`} alt="Rebound History tab" class="rounded-lg border border-slate-200 dark:border-[#263241] w-full" loading="lazy" />
         </div>
       </div>
     </section>
 
     <!-- Problem -->
-    <section class="py-20 bg-slate-50 dark:bg-[#1A1730]/50">
+    <section class="py-20 bg-slate-50 dark:bg-[#121A23]/50">
       <div class="max-w-6xl mx-auto px-4">
         <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">
-          Your Compose app recomposes 18x/sec<br/>
-          <span class="text-slate-500 dark:text-slate-400">and you don't know it</span>
+          Flat thresholds miss the point<br/>
+          <span class="text-slate-500 dark:text-slate-400">same rate, different meaning</span>
         </h2>
         <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Without per-composable budgets, you can't tell healthy animation-driven recomposition from pathological state thrashing. Here's what Rebound found in a real production app:
+          Without per-composable budgets, you cannot tell healthy animation-driven recomposition from pathological state thrashing. This table shows the kind of signal Rebound surfaces.
         </p>
         <div class="mt-10 overflow-x-auto">
           <table class="w-full max-w-3xl mx-auto text-sm">
             <thead>
-              <tr class="border-b border-slate-200 dark:border-[#2D2B42] text-left">
+              <tr class="border-b border-slate-200 dark:border-[#263241] text-left">
                 <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Composable</th>
                 <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Rate</th>
                 <th class="py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Budget</th>
@@ -209,28 +233,28 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
               </tr>
             </thead>
             <tbody class="font-mono">
-              <tr class="border-b border-slate-100 dark:border-[#2D2B42]/50">
+              <tr class="border-b border-slate-100 dark:border-[#263241]/50">
                 <td class="py-3 px-4 text-slate-900 dark:text-white">ShimmerBox</td>
                 <td class="py-3 px-4">18/s</td>
                 <td class="py-3 px-4 text-slate-500">5/s</td>
                 <td class="py-3 px-4">0%</td>
                 <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">OVER</span></td>
               </tr>
-              <tr class="border-b border-slate-100 dark:border-[#2D2B42]/50">
+              <tr class="border-b border-slate-100 dark:border-[#263241]/50">
                 <td class="py-3 px-4 text-slate-900 dark:text-white">MenuItem</td>
                 <td class="py-3 px-4">13/s</td>
                 <td class="py-3 px-4 text-slate-500">30/s</td>
                 <td class="py-3 px-4">0%</td>
                 <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">NEAR</span></td>
               </tr>
-              <tr class="border-b border-slate-100 dark:border-[#2D2B42]/50">
+              <tr class="border-b border-slate-100 dark:border-[#263241]/50">
                 <td class="py-3 px-4 text-slate-900 dark:text-white">DestinationItem</td>
                 <td class="py-3 px-4">9/s</td>
                 <td class="py-3 px-4 text-slate-500">5/s</td>
                 <td class="py-3 px-4">0%</td>
                 <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">OVER</span></td>
               </tr>
-              <tr class="border-b border-slate-100 dark:border-[#2D2B42]/50">
+              <tr class="border-b border-slate-100 dark:border-[#263241]/50">
                 <td class="py-3 px-4 text-slate-900 dark:text-white">TravelGuideCard</td>
                 <td class="py-3 px-4">8/s</td>
                 <td class="py-3 px-4 text-slate-500">5/s</td>
@@ -253,39 +277,39 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     <!-- Solution -->
     <section id="features" class="py-20">
       <div class="max-w-6xl mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Three layers of defense</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">What ships</h2>
         <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Rebound instruments at compile time, monitors at runtime, and reports in your IDE. All automatic.
         </p>
         <div class="mt-12 grid md:grid-cols-3 gap-8">
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-6 bg-white dark:bg-[#1A1730]">
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-6 bg-white dark:bg-[#121A23]">
             <div class="w-10 h-10 rounded-lg bg-brand-indigo/10 dark:bg-brand-indigo/20 flex items-center justify-center mb-4">
               <svg class="w-5 h-5 text-brand-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Compiler Plugin</h3>
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              Instruments every <code class="text-xs bg-slate-100 dark:bg-[#0F0D1A] px-1 py-0.5 rounded">@Composable</code> at the IR level. Infers budget class from call-site heuristics. Zero annotation required. Debug builds only.
+              Instruments every <code class="text-xs bg-slate-100 dark:bg-[#121A23] px-1 py-0.5 rounded">@Composable</code> at the IR level. Infers budget class from call-site heuristics. Zero annotation required. Debug builds only.
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-6 bg-white dark:bg-[#1A1730]">
-            <div class="w-10 h-10 rounded-lg bg-[#14B8A6]/10 dark:bg-[#14B8A6]/20 flex items-center justify-center mb-4">
-              <svg class="w-5 h-5 text-[#14B8A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-6 bg-white dark:bg-[#121A23]">
+            <div class="w-10 h-10 rounded-lg bg-brand-indigo/10 dark:bg-brand-indigo/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Budget Engine</h3>
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
               Six budget classes: Screen (3/s), Container (10/s), Interactive (30/s), List Item (60/s), Animated (120/s), Leaf (5/s). Dynamic scaling during scroll, animation, and input.
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-6 bg-white dark:bg-[#1A1730]">
-            <div class="w-10 h-10 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center mb-4">
-              <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-6 bg-white dark:bg-[#121A23]">
+            <div class="w-10 h-10 rounded-lg bg-brand-indigo/10 dark:bg-brand-indigo/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">IDE Cockpit</h3>
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
               Five-tab Android Studio tool window: live monitor with sparklines, hot spot ranking, timeline heatmap, parameter stability matrix, and session history with VCS correlation.
             </p>
             <p class="mt-3 text-sm">
-              <a href={`${base}ide-plugin/installation/`} class="text-brand-indigo dark:text-[#6366F1] hover:underline font-medium">Install the IDE plugin &rarr;</a>
+              <a href={`${base}ide-plugin/installation/`} class="text-brand-indigo dark:text-[#22D3EE] hover:underline font-medium">Install the IDE plugin &rarr;</a>
               <span class="text-slate-400 mx-1">&middot;</span>
               <a href={`${base}roadmap/`} class="text-slate-500 dark:text-slate-400 hover:underline text-xs">JetBrains Marketplace listing planned</a>
             </p>
@@ -295,39 +319,39 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     </section>
 
     <!-- Budget Classes -->
-    <section class="py-20 bg-slate-50 dark:bg-[#1A1730]/50">
+    <section class="py-20 bg-slate-50 dark:bg-[#121A23]/50">
       <div class="max-w-6xl mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Every composable gets a budget</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Budget classes</h2>
         <p class="mt-4 text-center text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Flat thresholds are wrong for most of your composables. Rebound assigns budgets by role.
         </p>
         <div class="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
             <div class="text-2xl font-bold text-brand-indigo">3/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Screen</div>
             <div class="mt-1 text-xs text-slate-500">Full pages</div>
           </div>
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
             <div class="text-2xl font-bold text-brand-indigo">10/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Container</div>
             <div class="mt-1 text-xs text-slate-500">Row, Column, Box</div>
           </div>
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
-            <div class="text-2xl font-bold text-[#14B8A6]">30/s</div>
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
+            <div class="text-2xl font-bold text-brand-indigo">30/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Interactive</div>
             <div class="mt-1 text-xs text-slate-500">Buttons, fields</div>
           </div>
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
-            <div class="text-2xl font-bold text-[#14B8A6]">60/s</div>
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
+            <div class="text-2xl font-bold text-brand-indigo">60/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">List Item</div>
             <div class="mt-1 text-xs text-slate-500">LazyColumn items</div>
           </div>
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
-            <div class="text-2xl font-bold text-purple-500">120/s</div>
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
+            <div class="text-2xl font-bold text-brand-indigo">120/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Animated</div>
             <div class="mt-1 text-xs text-slate-500">animate* APIs</div>
           </div>
-          <div class="rounded-lg border border-slate-200 dark:border-[#2D2B42] p-4 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-lg border border-slate-200 dark:border-[#263241] p-4 bg-white dark:bg-[#121A23] text-center">
             <div class="text-2xl font-bold text-brand-indigo">5/s</div>
             <div class="mt-1 text-sm font-medium text-slate-900 dark:text-white">Leaf</div>
             <div class="mt-1 text-xs text-slate-500">Text, Icon, Image</div>
@@ -344,22 +368,22 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
           Full KMP support. The compiler plugin instruments all targets. Transport adapts per platform.
         </p>
         <div class="mt-10 grid md:grid-cols-4 gap-6">
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-5 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-5 bg-white dark:bg-[#121A23] text-center">
             <div class="text-3xl mb-3">&#x1F4F1;</div>
             <h3 class="font-semibold text-slate-900 dark:text-white">Android</h3>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">ADB socket forward<br/>Device + Emulator</p>
           </div>
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-5 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-5 bg-white dark:bg-[#121A23] text-center">
             <div class="text-3xl mb-3">&#x1F5A5;</div>
             <h3 class="font-semibold text-slate-900 dark:text-white">iOS Simulator</h3>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Direct TCP on :18462<br/>Zero setup</p>
           </div>
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-5 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-5 bg-white dark:bg-[#121A23] text-center">
             <div class="text-3xl mb-3">&#x1F4E1;</div>
             <h3 class="font-semibold text-slate-900 dark:text-white">iOS Device</h3>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">WebSocket relay<br/>Bonjour auto-discovery</p>
           </div>
-          <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] p-5 bg-white dark:bg-[#1A1730] text-center">
+          <div class="rounded-xl border border-slate-200 dark:border-[#263241] p-5 bg-white dark:bg-[#121A23] text-center">
             <div class="text-3xl mb-3">&#x2615;</div>
             <h3 class="font-semibold text-slate-900 dark:text-white">JVM / Desktop</h3>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">In-memory metrics<br/>Transport planned</p>
@@ -369,7 +393,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     </section>
 
     <!-- Getting Started -->
-    <section id="get-started" class="py-20 bg-slate-50 dark:bg-[#1A1730]/50">
+    <section id="get-started" class="py-20 bg-slate-50 dark:bg-[#121A23]/50">
       <div class="max-w-4xl mx-auto px-4">
         <h2 class="text-3xl md:text-4xl font-bold text-center text-slate-900 dark:text-white">Get started in 60 seconds</h2>
         <div class="mt-12 space-y-8">
@@ -377,9 +401,9 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
             <div class="flex-none w-8 h-8 rounded-full bg-brand-indigo text-white flex items-center justify-center text-sm font-bold">1</div>
             <div class="flex-1">
               <h3 class="font-semibold text-slate-900 dark:text-white">Apply the Gradle plugin</h3>
-              <div class="mt-2 rounded-lg border border-slate-200 dark:border-[#2D2B42] bg-white dark:bg-[#1A1730] overflow-hidden">
+              <div class="mt-2 rounded-lg border border-slate-200 dark:border-[#263241] bg-white dark:bg-[#121A23] overflow-hidden">
                 <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>plugins &#123;
-    id("io.github.aldefy.rebound") version "0.2.1"
+          id("io.github.aldefy.rebound") version "0.2.2"
 &#125;</code></pre>
               </div>
             </div>
@@ -389,7 +413,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
             <div class="flex-1">
               <h3 class="font-semibold text-slate-900 dark:text-white">Run your debug build</h3>
               <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Rebound instruments every <code class="text-xs bg-slate-100 dark:bg-[#0F0D1A] px-1 py-0.5 rounded">@Composable</code> automatically. No annotations needed.
+                Rebound instruments every <code class="text-xs bg-slate-100 dark:bg-[#121A23] px-1 py-0.5 rounded">@Composable</code> automatically. No annotations needed.
               </p>
             </div>
           </div>
@@ -397,7 +421,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
             <div class="flex-none w-8 h-8 rounded-full bg-brand-indigo text-white flex items-center justify-center text-sm font-bold">3</div>
             <div class="flex-1">
               <h3 class="font-semibold text-slate-900 dark:text-white">See violations</h3>
-              <div class="mt-2 rounded-lg border border-slate-200 dark:border-[#2D2B42] bg-white dark:bg-[#1A1730] overflow-hidden">
+              <div class="mt-2 rounded-lg border border-slate-200 dark:border-[#263241] bg-white dark:bg-[#121A23] overflow-hidden">
                 <pre class="p-4 text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto"><code>$ ./rebound-cli.sh summary
 &#123;"composables":[
   &#123;"name":"ShimmerBox","rate":18,"budget":5,"class":"LEAF","over":true&#125;,
@@ -407,12 +431,12 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
             </div>
           </div>
         </div>
-        <div class="mt-12 rounded-xl border border-[#14B8A6]/30 bg-[#14B8A6]/5 dark:bg-[#14B8A6]/10 p-6">
+        <div class="mt-12 rounded-xl border border-brand-indigo/30 bg-brand-indigo/5 dark:bg-brand-indigo/10 p-6">
           <h3 class="font-semibold text-slate-900 dark:text-white">iOS Physical Device?</h3>
           <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Build and start the relay on your Mac. The device discovers it via Bonjour automatically.
           </p>
-          <div class="mt-3 rounded-lg bg-white dark:bg-[#1A1730] border border-slate-200 dark:border-[#2D2B42] overflow-hidden">
+          <div class="mt-3 rounded-lg bg-white dark:bg-[#121A23] border border-slate-200 dark:border-[#263241] overflow-hidden">
             <pre class="p-3 text-sm font-mono text-slate-800 dark:text-slate-200"><code>./tools/build-relay.sh && ./tools/rebound-relay</code></pre>
           </div>
         </div>
@@ -422,17 +446,17 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
     <!-- Sample Apps -->
     <section class="py-12">
       <div class="max-w-4xl mx-auto px-4">
-        <div class="rounded-xl border border-slate-200 dark:border-[#2D2B42] bg-white dark:bg-[#1A1730] p-6 flex flex-col md:flex-row gap-6 items-start">
+        <div class="rounded-xl border border-slate-200 dark:border-[#263241] bg-white dark:bg-[#121A23] p-6 flex flex-col md:flex-row gap-6 items-start">
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Try it on a real app</h3>
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              The <code class="text-xs bg-slate-100 dark:bg-[#0F0D1A] px-1 py-0.5 rounded">sample/</code> module in this repo is a quick-start Compose app with Rebound pre-configured. For a more interesting stress test, try <strong>StickerExplode</strong> — a particle-effect demo with heavy animation that exercises every budget class.
+              The <code class="text-xs bg-slate-100 dark:bg-[#121A23] px-1 py-0.5 rounded">sample/</code> module in this repo is a quick-start Compose app with Rebound pre-configured. For a more interesting stress test, try <strong>StickerExplode</strong> — a particle-effect demo with heavy animation that exercises every budget class.
             </p>
             <div class="mt-4 flex flex-wrap gap-3">
-              <a href="https://github.com/aldefy/compose-rebound/tree/master/sample" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2B42] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0F0D1A] transition-colors">
+              <a href="https://github.com/aldefy/compose-rebound/tree/master/sample" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#263241] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0B0F14] transition-colors">
                 <span>sample/ module</span>
               </a>
-              <a href="https://github.com/aldefy/StickerExplode" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2B42] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0F0D1A] transition-colors">
+              <a href="https://github.com/aldefy/StickerExplode" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#263241] text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0B0F14] transition-colors">
                 <span>StickerExplode</span>
               </a>
             </div>
@@ -443,7 +467,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-slate-200 dark:border-[#2D2B42] py-12 mt-24">
+  <footer class="border-t border-slate-200 dark:border-[#263241] py-12 mt-24">
     <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <p class="text-sm text-slate-500">
         Apache 2.0 &middot; Built by <a href="https://x.com/AditLal" class="underline hover:text-slate-900 dark:hover:text-white">Adit Lal</a>

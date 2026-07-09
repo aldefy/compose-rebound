@@ -151,42 +151,31 @@ val regressions = ReboundBaseline.compare(baseline, current, threshold = 20)
 
 Designed for CI integration — fail the build if recomposition rates regress.
 
-## Antipattern Benchmark
+## Benchmark Coverage
 
-Rebound ships with a test suite that proves detection of real Compose antipatterns:
+The sample app and docs describe representative Compose antipatterns, but the repo does not currently ship a connected-device benchmark suite that proves all of them in CI.
 
-### Synthetic Tests (6)
-| Test | Signal |
-|------|--------|
-| Unstable list parameter | totalCount > 50 on LEAF |
-| Backward write loop | SCREEN budget tracked |
-| Unstable lambda parameter | totalEnters > 50 |
-| Sensor spam (60fps updates) | totalCount > 50 on LEAF |
-| Stable animation (no false positive) | totalCount < 360 on ANIMATED |
-| High skip rate (stable params) | skipRate >= 80% |
+The pattern library is still useful as documentation:
 
-### Real-World Antipatterns (6)
-From [compose-patterns-playground](https://github.com/aldefy/compose-patterns-playground) (Droidcon India 2025 workshop):
+- Unstable list parameter
+- Backward write loop
+- Unstable lambda parameter
+- Sensor spam at 60fps
+- Stable animation without false positives
+- High skip rate with stable parameters
+- Derived state misuse
+- Unstable lambda captures
+- Side effect in composition
+- State read too high
 
-| Antipattern | Broken Signal | Fixed Signal |
-|------------|---------------|--------------|
-| AP02: Derived state misuse | totalCount > 50 (filter reruns on unrelated state) | Isolated from unrelated changes |
-| AP03: Unstable lambda captures | totalCount > 25 (all items recompose) | skipRate >= 80% |
-| AP05: Side effect in composition | totalCount > 10 + side effect fires every recomp | Side effect scoped to LaunchedEffect |
-| AP07: State read too high | totalCount > 50 (child recomps on every volume change) | totalCount = 1 (only initial) |
-
-All 12 tests pass on CI. Run with:
-
-```bash
-./gradlew :sample:connectedDebugAndroidTest
-```
+The next step is to turn those scenarios into device-backed tests or delete the claims entirely. Until then, treat them as documented examples, not CI proof.
 
 ## Zero Config Setup
 
 ```kotlin
 // build.gradle.kts
 plugins {
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.2"
 }
 ```
 

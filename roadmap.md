@@ -1,6 +1,6 @@
 # Rebound iOS Roadmap
 
-## Current Status (March 2026)
+## Current Status (July 2026)
 
 ### Production-Ready
 
@@ -28,9 +28,9 @@
 
 ## Gaps
 
-### IDE plugin cannot connect to physical iOS devices (HIGH)
+### IDE plugin lacks relay-aware UX for physical iOS devices (HIGH)
 
-`ReboundConnection.kt` tries ADB forward or direct TCP. When the relay is running on `:18462`, `tryDirectTcp()` succeeds transparently — so the IDE *does* work with physical devices if the relay is running. The gap is:
+`ReboundConnection.kt` tries ADB forward or direct TCP. When the relay is running on `:18462`, `tryDirectTcp()` succeeds transparently, so the IDE *does* work with physical devices. The gap is the user experience:
 - No auto-detection of iOS vs Android context
 - Error message doesn't mention relay
 - No auto-spawn of relay process

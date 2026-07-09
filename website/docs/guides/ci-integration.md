@@ -5,54 +5,39 @@ title: "CI Integration"
 
 # CI Integration
 
-:::info Future Feature
-CI budget gates are on the Rebound roadmap. This page describes the planned approach and how it will work. The implementation is not yet available.
-:::
+Rebound ships CI budget gates today through the Gradle tasks `reboundSave`, `reboundDiff`, and `reboundGate`.
 
-## Vision
+## Quick start
 
-Rebound's runtime collects recomposition rates and budget violations during app execution. CI integration will make it possible to export those metrics, compare them across builds, and fail a pull request if budgets regress.
+### 1. Capture a baseline snapshot
 
-No other tool correlates code changes with runtime recomposition regressions in CI. This is the feature that will make it possible to catch performance problems before they reach production.
-
-## How it will work
-
-### Step 1: Capture a baseline snapshot
-
-Run your app's UI tests (or an instrumented test scenario) with Rebound active. Use the CLI `snapshot` command to export the current state:
+Run your app with Rebound active, exercise the UI, then save a snapshot:
 
 ```bash
-adb forward tcp:18462 localabstract:rebound
-./rebound-cli.sh snapshot > rebound-baseline.json
+./gradlew reboundSave -Ptag=baseline
 ```
 
-The snapshot JSON contains every instrumented composable, its rate, budget class, budget ratio, skip percentage, and violation status.
+This writes `.rebound/baseline.json`. Commit it to the repo.
 
-### Step 2: Compare across builds
+### 2. Gate your PRs
 
-On each pull request, run the same test scenario and capture a new snapshot. Compare it against the baseline:
+Add one Gradle task to your CI pipeline:
 
 ```bash
-./rebound-cli.sh snapshot > rebound-pr.json
-
-# Compare (planned CLI command)
-./rebound-cli.sh compare --baseline rebound-baseline.json --current rebound-pr.json
+./gradlew reboundGate -Pbaseline=.rebound/baseline.json
 ```
 
-The comparison will report:
+This connects to the running app, captures a fresh snapshot, diffs it against the baseline, and fails the build if any composable regressed beyond the threshold.
 
-- New violations introduced by this PR
-- Existing violations that worsened
-- Composables whose budget ratio increased significantly
-- Composables that improved (moved from violation to healthy)
+### Options
 
-### Step 3: Fail the PR on regression
-
-Set a threshold for acceptable regression. If any composable crosses from healthy to violation, or if the total violation count increases, fail the check.
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-Pbaseline=<path>` | (required) | Path to committed baseline JSON |
+| `-Pthreshold=<int>` | `20` | Minimum % change to flag as regression |
+| `-Pport=<int>` | `18462` | Rebound socket port |
 
 ## Example GitHub Actions workflow
-
-This is a conceptual workflow. The exact CLI commands will be finalized when the feature ships.
 
 ```yaml
 name: Rebound Budget Check
@@ -98,63 +83,9 @@ jobs:
             ./rebound-cli.sh snapshot > rebound-snapshot.json
 
             # Compare against baseline (committed in repo)
-            ./rebound-cli.sh compare \
-              --baseline ci/rebound-baseline.json \
-              --current rebound-snapshot.json \
-              --fail-on-regression
+            ./rebound-cli.sh diff ci/rebound-baseline.json rebound-snapshot.json
 ```
 
-## Planned output format
+## Output
 
-The comparison output will be structured for both human reading and machine parsing:
-
-```json
-{
-  "summary": {
-    "total_composables": 29,
-    "new_violations": 1,
-    "worsened": 2,
-    "improved": 1,
-    "unchanged": 25
-  },
-  "regressions": [
-    {
-      "composable": "ProfileHeader",
-      "baseline_rate": 3,
-      "current_rate": 11,
-      "budget": 5,
-      "status": "new_violation"
-    }
-  ],
-  "improvements": [
-    {
-      "composable": "UserCard",
-      "baseline_rate": 9,
-      "current_rate": 4,
-      "budget": 5,
-      "status": "resolved"
-    }
-  ]
-}
-```
-
-## What you can do today
-
-While CI budget gates are in development, you can still use Rebound in your CI pipeline:
-
-1. **Run the CLI `summary` command** after instrumented tests to log the current state.
-2. **Grep for violations** in the output and fail the build if any appear.
-3. **Store snapshots as build artifacts** to manually compare across commits.
-
-```bash
-# Simple violation check (works today)
-adb forward tcp:18462 localabstract:rebound
-VIOLATIONS=$(./rebound-cli.sh summary | grep "VIOLATION" | wc -l)
-if [ "$VIOLATIONS" -gt 0 ]; then
-  echo "Rebound found $VIOLATIONS budget violations"
-  ./rebound-cli.sh summary
-  exit 1
-fi
-```
-
-This is a rough approximation. The planned `compare` command will provide proper diffing with baseline awareness, threshold configuration, and structured output.
+`reboundGate` and `reboundDiff` print a human-readable report and fail on regression by default.

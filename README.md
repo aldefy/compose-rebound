@@ -10,9 +10,15 @@
 [![Gradle Plugin](https://img.shields.io/badge/Gradle%20Plugin-02303A.svg?logo=gradle&logoColor=white)](https://plugins.gradle.org)
 [![IntelliJ](https://img.shields.io/badge/IDE%20Plugin-000000.svg?logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com)
 
-**Compose recomposition budget monitor** — catch runaway recompositions before they ship.
+**Rebound helps Android and Compose Multiplatform teams catch recomposition regressions before they ship.**
 
-Rebound is a Kotlin compiler plugin that instruments every `@Composable` function with lightweight tracking calls. At runtime, it monitors recomposition rates against per-composable budgets, detects violations, and reports them via an Android Studio tool window, CLI, or logcat. Works on Android and iOS (Compose Multiplatform). Zero config required — just apply the Gradle plugin. The IDE plugin provides a 5-tab performance cockpit with live monitoring, hot spots ranking, timeline heatmap, stability analysis, and session history with VCS correlation.
+It instruments every `@Composable` function, applies a budget based on what that composable does, and flags the ones that start recomposing too often. You see the result in Android Studio, in the CLI, or in logcat. Zero config required beyond applying the Gradle plugin.
+
+## Why teams use it
+
+- **CI guardrail** — fail builds when recomposition budgets regress
+- **IDE feedback** — inspect hot spots, timeline spikes, and stability issues without leaving Android Studio
+- **Fast local checks** — use the CLI to script snapshot, diff, and watch workflows
 
 ## Features
 
@@ -44,7 +50,7 @@ pluginManagement {
 ```kotlin
 // build.gradle.kts (app module)
 plugins {
-    id("io.github.aldefy.rebound") version "0.2.1"
+    id("io.github.aldefy.rebound") version "0.2.2"
 }
 ```
 
@@ -281,11 +287,11 @@ The Gradle plugin auto-detects your project's Kotlin version and selects the cor
 See [roadmap.md](roadmap.md) for the full iOS roadmap.
 
 - [x] **iOS transport** — TCP server (simulator) + WebSocket relay (physical device) + console fallback
-- [ ] CI budget gates — fail builds when recomposition budgets regress
+- [x] CI budget gates — fail builds when recomposition budgets regress
 - [ ] Flame chart mode in Timeline tab
-- [ ] JetBrains Marketplace publication
+- [x] JetBrains Marketplace publication
 - [ ] Session export/import for team sharing
-- [ ] Baseline snapshots for regression testing
+- [x] Baseline snapshots for regression testing
 - [ ] ComposeProof integration for LLM-driven analysis
 - [ ] DNS resolution for relay host override
 - [ ] Multi-device relay routing
@@ -312,7 +318,7 @@ Full documentation at [aldefy.github.io/compose-rebound](https://aldefy.github.i
 
 # Build IDE plugin
 ./gradlew :rebound-ide:buildPlugin
-# Output: rebound-ide/build/distributions/rebound-ide-0.1.0.zip
+# Output: rebound-ide/build/distributions/rebound-ide-0.2.2.zip
 
 # Run sample app
 ./gradlew :sample:installDebug

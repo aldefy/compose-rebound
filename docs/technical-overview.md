@@ -281,11 +281,11 @@ pluginManagement {
 
 // build.gradle.kts
 plugins {
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.2"
 }
 
 dependencies {
-    commonMainImplementation("io.aldefy.rebound:rebound-runtime:0.1.0")
+    commonMainImplementation("io.github.aldefy.rebound:rebound-runtime:0.2.2")
 }
 
 rebound {
@@ -437,4 +437,4 @@ Zero config. Context-aware. Always on during development. That is the design.
 
 **Rebound** is open source at [github.com/aldefy/compose-rebound](https://github.com/aldefy/compose-rebound).
 
-Package: `io.aldefy.rebound` -- version `0.1.0` available now via `mavenLocal()`.
+Package: `io.github.aldefy.rebound` -- version `0.2.2` available now via `mavenLocal()`.

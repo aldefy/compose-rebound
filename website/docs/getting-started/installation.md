@@ -32,7 +32,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.2"
 }
 ```
 
@@ -78,7 +78,7 @@ The `rebound-compiler-k2` module is a standalone composite build that targets th
 When `debugOnly = true` (the default), the Gradle plugin adds:
 
 - **Compiler plugin** -- added to `kotlinCompilerPluginClasspath` for debug variants only
-- **Runtime** -- added as `debugImplementation "io.aldefy:rebound-runtime:$version"`
+- **Runtime** -- added as `debugImplementation "io.github.aldefy.rebound:rebound-runtime:$version"`
 
 Release builds contain no Rebound code. There is zero overhead in production.
 

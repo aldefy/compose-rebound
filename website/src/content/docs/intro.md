@@ -4,7 +4,7 @@ title: Introduction
 
 # Rebound
 
-**Rebound is a Compose recomposition budget monitor.** It assigns each `@Composable` function a recomposition rate budget based on what that composable does, and alerts you when the budget is exceeded.
+**Rebound helps you catch recomposition regressions before they ship.** It assigns each `@Composable` function a recomposition rate budget based on what that composable does, and alerts you when the budget is exceeded in CI, Android Studio, or the CLI.
 
 A `HomeScreen` recomposing 10 times per second is a problem. A gesture-driven composable recomposing 10 times per second is fine. Same number, completely different situation. Flat thresholds cannot distinguish them. Rebound can.
 
@@ -14,7 +14,7 @@ Three lines in your build file:
 
 ```kotlin title="build.gradle.kts"
 plugins {
-    id("io.github.aldefy.rebound") version "0.1.0"
+    id("io.github.aldefy.rebound") version "0.2.2"
 }
 ```
 

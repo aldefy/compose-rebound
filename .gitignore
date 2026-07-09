@@ -6,6 +6,7 @@ local.properties
 .DS_Store
 .intellijPlatform/
 .rebound/
+.composeproof/
 docs/blog.md
 docs/plans/
 CLAUDE.md

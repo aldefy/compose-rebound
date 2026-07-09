@@ -44,9 +44,9 @@ val kotlinVersion = project.extensions
 
 val compilerArtifact = if (kotlinVersion != null &&
     compareVersions(kotlinVersion, "2.2.0") >= 0) {
-    "io.aldefy:rebound-compiler-kotlin-2.2:$reboundVersion"
+    "io.github.aldefy.rebound:rebound-compiler-kotlin-2.2:$reboundVersion"
 } else {
-    "io.aldefy:rebound-compiler:$reboundVersion"
+    "io.github.aldefy.rebound:rebound-compiler:$reboundVersion"
 }
 ```
 
@@ -58,7 +58,7 @@ In rare cases where auto-detection fails (e.g., custom Kotlin distributions), yo
 
 ```kotlin title="build.gradle.kts"
 dependencies {
-    kotlinCompilerPluginClasspath("io.aldefy:rebound-compiler-kotlin-2.2:0.1.0")
+    kotlinCompilerPluginClasspath("io.github.aldefy.rebound:rebound-compiler-kotlin-2.2:0.2.2")
 }
 ```
 
@@ -66,7 +66,7 @@ This bypasses the Gradle plugin's auto-selection. You must also add the runtime 
 
 ```kotlin
 dependencies {
-    debugImplementation("io.aldefy:rebound-runtime:0.1.0")
+    debugImplementation("io.github.aldefy.rebound:rebound-runtime:0.2.2")
 }
 ```
 

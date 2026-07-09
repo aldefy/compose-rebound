@@ -30,27 +30,25 @@ Returns a full JSON snapshot of all instrumented composables with their current 
 
 ```json
 {
-  "composables": [
-    {
-      "fqn": "com.example.ui.HomeScreen",
-      "simpleName": "HomeScreen",
+  "composables": {
+    "com.example.ui.HomeScreen": {
       "budgetClass": "SCREEN",
-      "budget": 3,
-      "rate": 8,
+      "budgetPerSecond": 3,
+      "totalCompositions": 189,
       "peakRate": 12,
+      "currentRate": 8,
       "totalEnters": 245,
-      "totalCount": 189,
+      "skipCount": 56,
       "skipRate": 0.23,
       "forcedCount": 15,
       "paramDrivenCount": 174,
-      "parentFqn": null,
-      "depth": 0
+      "lastInvalidation": "searchQuery",
+      "parent": "",
+      "paramStates": "items=DIFFERENT,query=SAME",
+      "depth": 0,
+      "paramTypes": "unstable,stable"
     }
-  ],
-  "interactionState": "IDLE",
-  "violationCount": 3,
-  "composableCount": 45,
-  "timestamp": 1709900000000
+  }
 }
 ```
 

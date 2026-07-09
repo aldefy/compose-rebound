@@ -110,6 +110,29 @@ jobs:
         working-directory: rebound-compiler-k2-3
         run: ./gradlew build
 
+  build-docs:
+    name: Build · docs site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install docs dependencies
+        run: cd website && npm ci
+      - name: Build docs site
+        run: cd website && npm run build
+      - name: Check public doc version drift
+        run: |
+          VERSION=$(grep '^rebound_version=' gradle.properties | cut -d'=' -f2)
+          if rg -n "0\\.1\\.0|0\\.2\\.1|io\\.aldefy:" README.md docs website/docs website/src/content/docs website/src/pages/index.astro; then
+            echo "::error::Found stale version or coordinate references. Expected only current release $VERSION and io.github.aldefy.rebound coordinates in public docs."
+            exit 1
+          fi
+
   verify:
     name: CI ✓
     needs:
@@ -119,6 +142,7 @@ jobs:
       - build-gradle-plugin
       - build-compiler-k2
       - build-compiler-k2-3
+      - build-docs
     runs-on: ubuntu-latest
     steps:
       - run: echo "All parallel builds passed"
