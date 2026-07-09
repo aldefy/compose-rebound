@@ -13,8 +13,8 @@ env:
 
 jobs:
   build-runtime:
-    name: Build · runtime (KMP)
-    runs-on: macos-latest
+    name: Build · runtime (Android/JVM)
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +23,8 @@ jobs:
           distribution: zulu
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - name: Cache Kotlin/Native compiler
-        uses: actions/cache@v4
-        with:
-          path: ~/.konan
-          key: konan-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: konan-${{ runner.os }}-
-      - name: Build runtime
-        run: ./gradlew :rebound-runtime:build
+      - name: Build runtime Android/JVM surfaces
+        run: ./gradlew :rebound-runtime:assembleDebug :rebound-runtime:jvmTest
 
   build-compiler:
     name: Build · compiler
