@@ -55,8 +55,12 @@ class ComposableMetrics(var budgetClass: BudgetClass) {
         return windowCount
     }
 
-    /** Returns the best available rate: current window if it has meaningful data, else last completed window. */
-    fun currentRate(): Int = if (windowCount > 1) windowCount else lastWindowCount
+    /** Returns the best available recent rate, or 0 after the composable stops composing. */
+    fun currentRate(): Int {
+        val elapsed = currentTimeNanos() - windowStartTimeNs
+        if (windowStartTimeNs == 0L || elapsed > 2_000_000_000L) return 0
+        return if (windowCount > 1) windowCount else lastWindowCount
+    }
 
     fun peakRate(): Int = peakRate
 }

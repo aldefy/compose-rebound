@@ -153,24 +153,24 @@ val regressions = ReboundBaseline.compare(baseline, current, threshold = 20)
 
 Designed for CI integration — fail the build if recomposition rates regress.
 
-## Benchmark Coverage
+## Sample Proof
 
-The sample app and docs describe representative Compose antipatterns, but the repo does not currently ship a connected-device benchmark suite that proves all of them in CI.
+The sample app includes a runnable before/after scenario:
 
-The pattern library is still useful as documentation:
+- **Violation:** `BudgetViolationScreen` reads a 60fps ticker at screen scope, intentionally exceeding the 3/s `SCREEN` budget.
+- **Fixed:** `BudgetFixedScreen` keeps the screen stable and moves the ticker into `AnimatedTickerBadge`, which is explicitly classified as `ANIMATED`.
 
-- Unstable list parameter
-- Backward write loop
-- Unstable lambda parameter
-- Sensor spam at 60fps
-- Stable animation without false positives
-- High skip rate with stable parameters
-- Derived state misuse
-- Unstable lambda captures
-- Side effect in composition
-- State read too high
+The demo path is:
 
-The next step is to turn those scenarios into device-backed tests or delete the claims entirely. Until then, treat them as documented examples, not CI proof.
+```bash
+./gradlew :sample:installDebug
+adb shell am start -n io.aldefy.rebound.sample/.MainActivity
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+CI compiles the sample debug APK so the demo cannot drift from the codebase.
 
 ## Zero Config Setup
 

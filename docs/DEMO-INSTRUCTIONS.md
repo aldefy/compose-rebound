@@ -8,7 +8,7 @@ Step-by-step instructions for recording a demo of all Rebound IDE plugin feature
 - Physical device or emulator connected via ADB
 - Rebound plugin installed (build from source: `./gradlew :rebound-ide:buildPlugin`)
 - Sample app installed: `./gradlew :sample:installDebug`
-- ADB forward set up: `adb forward tcp:18462 localabstract:rebound`
+- Rebound CLI available from the repo root
 
 ## Recording Setup
 
@@ -19,6 +19,30 @@ Step-by-step instructions for recording a demo of all Rebound IDE plugin feature
 
 ---
 
+## CLI Proof Path
+
+Before recording the IDE workflow, prove the runtime path in a terminal:
+
+```bash
+adb shell am start -n io.aldefy.rebound.sample/.MainActivity
+
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+Expected signal: `BudgetViolationScreen` is over its `SCREEN` budget because it reads a 60fps ticker at screen scope.
+
+Tap **Fixed** in the sample app, wait a few seconds, then rerun:
+
+```bash
+./rebound-cli.sh summary
+```
+
+The fast ticker should now be isolated in `AnimatedTickerBadge`, which is explicitly marked as `ANIMATED`.
+
+---
+
 ## Phase 1: Monitor Tab (Live Recomposition Tracking)
 
 **What to show:** Real-time composable tree with rates, budgets, sparkline, and event log.
@@ -26,7 +50,7 @@ Step-by-step instructions for recording a demo of all Rebound IDE plugin feature
 1. Open the **Rebound** tool window (bottom panel, or View → Tool Windows → Rebound)
 2. You should be on the **Monitor** tab by default
 3. Click **Start** — status changes to "Capturing..."
-4. On the device, interact with the sample app (scroll, tap counter)
+4. On the device, keep the sample on the **Violation** tab
 5. **Show the tree:** composables appear with rates, budgets, skip%
    - Point out color coding: red = over budget, yellow = near, green = OK
 6. **Click a composable** in the tree → detail panel shows full info on the right
@@ -137,7 +161,7 @@ Step-by-step instructions for recording a demo of all Rebound IDE plugin feature
 **What to show:** A realistic debugging workflow using all features together.
 
 1. **Start capture** in Monitor tab
-2. Interact with the sample app — trigger heavy recompositions (rapid counter increments)
+2. Keep the sample app on the **Violation** tab so the screen-level ticker keeps recomposing
 3. **Glance at status bar** — see "3 violations" appear
 4. **Switch to Hot Spots** — immediately see the worst offender at the top
 5. **Double-click** the top violator (if source navigation is wired) or note its name
@@ -158,16 +182,15 @@ Step-by-step instructions for recording a demo of all Rebound IDE plugin feature
 
 The sample app (`io.aldefy.rebound.sample`) has built-in scenarios:
 
-- **Counter screen:** Auto-incrementing counter at ~60fps — guaranteed budget violations
-- **StableList:** LazyColumn with items — scroll to trigger recompositions
-- **ProblemComposables:** Intentionally unstable composables for testing
-- **PlaygroundAntipatterns:** Common Compose antipatterns that cause excessive recomposition
+- **Violation:** `BudgetViolationScreen` reads a 60fps ticker at screen scope. This intentionally exceeds the 3/s `SCREEN` budget.
+- **Fixed:** `BudgetFixedScreen` keeps the screen stable and moves the fast ticker into `AnimatedTickerBadge`, which is marked with `@ReboundBudget(BudgetClass.ANIMATED)`.
+- **StableList:** A normal `LazyColumn` included so the sample looks like a realistic Compose screen instead of a bare counter.
 
 For best demo results:
 1. Launch the sample app
 2. Wait 2-3 seconds for initial composables to register
-3. Start interacting — the counter auto-runs, so violations appear immediately
-4. Scroll the list to trigger additional recomposition bursts
+3. Leave the app on **Violation** for the first summary
+4. Tap **Fixed**, wait a few seconds, then rerun `summary` for the contrast
 
 ---
 
@@ -175,7 +198,7 @@ For best demo results:
 
 | Issue | Fix |
 |-------|-----|
-| "Stopped" won't change to "Capturing" | Run `adb forward tcp:18462 localabstract:rebound` |
+| "Stopped" won't change to "Capturing" | Run `./rebound-cli.sh doctor` and fix the reported socket/device issue |
 | No composables in tree | Make sure sample app is in foreground and Rebound runtime is active |
 | Gutter dots not appearing | Check Settings → Inlay Hints → Rebound is enabled |
 | Plugin not in tool windows | Reinstall: `./gradlew :rebound-ide:buildPlugin`, then install from disk |

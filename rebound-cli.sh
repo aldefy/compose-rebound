@@ -301,7 +301,7 @@ do_check() {
         echo "Summary failed: no response" >&2
         exit 1
     fi
-    SUMMARY_TOP=$(echo "$SUMMARY_RESULT" | python3 -c "import json,sys; print(len(json.load(sys.stdin).get('topByRate',[])))" 2>/dev/null)
+    SUMMARY_TOP=$(echo "$SUMMARY_RESULT" | python3 -c "import json,sys; data=json.load(sys.stdin); print(len(data.get('topByRate', data.get('composables', []))))" 2>/dev/null)
     if [ -z "$SUMMARY_TOP" ]; then
         echo "Summary failed: invalid JSON" >&2
         exit 1

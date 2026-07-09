@@ -85,6 +85,21 @@ Run the CLI while the debug app is open:
 
 Connect the IDE plugin for richer live output.
 
+### 60-second sample proof
+
+The repo includes a sample app that intentionally violates a screen-level recomposition budget by reading a 60fps ticker at `BudgetViolationScreen` scope.
+
+```bash
+./gradlew :sample:installDebug
+adb shell am start -n io.aldefy.rebound.sample/.MainActivity
+
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+Expected signal: `BudgetViolationScreen` appears over its `SCREEN` budget. Tap **Fixed** in the sample app, wait a few seconds, then rerun `summary` to see the fast state isolated in an `ANIMATED` child.
+
 ## Architecture
 
 ![Rebound architecture — compile time to runtime to IDE](assets/diagrams/03-rebound-architecture.svg)
@@ -103,7 +118,7 @@ The compiler plugin injects `ReboundTracker.onCompositionEnter/Exit` calls into 
 | `rebound-gradle` | Gradle plugin — auto-wires compiler + runtime, selects correct artifact |
 | `rebound-ide` | Android Studio plugin — 5-tab performance cockpit with editor integration |
 | `tools/rebound-relay` | Mac relay server — bridges iOS physical devices to CLI/IDE via WebSocket |
-| `sample` | Sample Android app |
+| `sample` | Android sample app with a runnable recomposition-budget violation demo |
 
 ## Configuration
 

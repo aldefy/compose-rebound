@@ -16,7 +16,7 @@ compose-rebound/
   rebound-gradle/          Gradle plugin (auto-wires compiler + runtime)
   rebound-ide/             Android Studio tool window plugin
   rebound-cli.sh           CLI over ADB socket
-  sample/                  Sample app + instrumented test suite
+  sample/                  Sample app with runnable violation/fix demo
 ```
 
 ### rebound-compiler

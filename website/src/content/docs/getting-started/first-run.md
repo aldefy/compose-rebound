@@ -103,6 +103,23 @@ If you prefer the terminal, use this as the known-good validation path:
 
 `doctor` is for setup failures. `check` proves the runtime path works end to end. `summary` is the human-sized output for reviews and automation.
 
+## 6. Try the Sample Proof
+
+The repo includes a sample app with a deliberate recomposition-budget violation:
+
+```bash
+./gradlew :sample:installDebug
+adb shell am start -n io.aldefy.rebound.sample/.MainActivity
+
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+Expected signal: `BudgetViolationScreen` appears over its `SCREEN` budget because it reads a 60fps ticker at screen scope.
+
+Tap **Fixed** in the sample app, wait a few seconds, then rerun `summary`. The fast ticker is isolated in `AnimatedTickerBadge`, which is marked as `ANIMATED`.
+
 ## Troubleshooting
 
 **No violations in logcat?**
