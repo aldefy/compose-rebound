@@ -6,6 +6,12 @@ title: Setup
 
 The Rebound CLI is a Bash script (`rebound-cli.sh`) that communicates with the app's runtime over an ADB-forwarded socket. No additional dependencies beyond `adb`, `nc` (netcat), and `python3` are required.
 
+By default the CLI uses port `18462`. Override it with `REBOUND_PORT` if you are running tests or a relay on a different port:
+
+```bash
+REBOUND_PORT=18463 ./rebound-cli.sh doctor
+```
+
 ## ADB Forward Setup
 
 The app's `ReboundServer` binds a `LocalServerSocket` on the Android abstract namespace. ADB bridges this to a TCP port on your machine:
@@ -31,6 +37,8 @@ Each request is a fresh TCP connection. There is no persistent connection or str
 
 | Command | Response |
 |---------|----------|
+| `doctor` | Diagnostic report for tools, device state, sockets, and ADB forwarding |
+| `check` | Quick sanity pass: `ping` + `snapshot` + `summary` |
 | `ping` | `"pong"` -- health check |
 | `snapshot` | Full metrics JSON for all instrumented composables |
 | `summary` | Top 10 composables by rate, plus violation count |
@@ -42,7 +50,7 @@ Each request is a fresh TCP connection. There is no persistent connection or str
 
 The app is not running or `ReboundServer` has not started yet.
 
-**Fix:** Ensure the app is running in debug mode, then re-run `adb forward tcp:18462 localabstract:rebound`.
+**Fix:** Run `./rebound-cli.sh doctor`, ensure the app is running in debug mode, then re-run `adb forward tcp:18462 localabstract:rebound`.
 
 ### Socket taken by another app
 

@@ -121,6 +121,8 @@ Targets Android Studio 2024.2.1.3+ (Hedgehog through Panda 2).
 ./rebound-cli.sh summary    # Top 10 by rate + violation count
 ./rebound-cli.sh watch      # Live refresh every 1s
 ./rebound-cli.sh ping       # Health check
+./rebound-cli.sh check      # Ping + snapshot + summary sanity check
+./rebound-cli.sh doctor     # Diagnose tools, device, socket, and ADB forwarding
 ```
 
 Auto-discovers sockets, pretty-prints JSON.

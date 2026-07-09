@@ -88,6 +88,12 @@ If you prefer the terminal:
 # Set up ADB forward
 adb forward tcp:18462 localabstract:rebound
 
+# One-pass sanity check
+./rebound-cli.sh check
+
+# Diagnose connection problems
+./rebound-cli.sh doctor
+
 # Health check
 ./rebound-cli.sh ping
 

@@ -6,6 +6,8 @@
 #   ./rebound-cli.sh summary           # top 10 violators
 #   ./rebound-cli.sh telemetry         # anonymized aggregate stats by budget class
 #   ./rebound-cli.sh ping              # health check
+#   ./rebound-cli.sh check             # ping + snapshot + summary sanity check
+#   ./rebound-cli.sh doctor            # diagnose connection/setup problems
 #   ./rebound-cli.sh watch             # live updates every 1s
 #   ./rebound-cli.sh save <file>       # save live snapshot to file
 #   ./rebound-cli.sh diff <before> <after> [threshold]  # compare two saved snapshots
@@ -17,7 +19,7 @@
 #
 # Works with: ComposeProof MCP, any shell tool, AI coding agents
 
-PORT=18462
+PORT="${REBOUND_PORT:-18462}"
 CMD="${1:-snapshot}"
 CONNECTION_MODE=""
 
@@ -34,15 +36,15 @@ try_direct() {
 # ADB forward for Android
 setup_adb_forward() {
     # Try canonical name first
-    adb forward tcp:$PORT localabstract:rebound 2>/dev/null
+    adb forward tcp:$PORT localabstract:rebound >/dev/null 2>&1
     RESULT=$(send_command "ping")
     if [ "$RESULT" = "pong" ]; then
         return 0
     fi
 
     # Discover fallback sockets (rebound_<pid>)
-    for SOCK in $(adb shell "cat /proc/net/unix 2>/dev/null" | grep -oE '@rebound_[0-9]+' | sed 's/@//'); do
-        adb forward tcp:$PORT localabstract:$SOCK 2>/dev/null
+    for SOCK in $(adb shell "cat /proc/net/unix 2>/dev/null" 2>/dev/null | grep -oE '@rebound_[0-9]+' | sed 's/@//'); do
+        adb forward tcp:$PORT localabstract:$SOCK >/dev/null 2>&1
         RESULT=$(send_command "ping")
         if [ "$RESULT" = "pong" ]; then
             return 0
@@ -269,11 +271,172 @@ do_save() {
     echo "Saved $COUNT composables to $FILE"
 }
 
+do_check() {
+    echo "Rebound quick check [$CONNECTION_MODE]"
+
+    PING_RESULT=$(exec_command "ping")
+    case "$PING_RESULT" in
+        pong*) ;;
+        *)
+        echo "Ping failed: $PING_RESULT" >&2
+        exit 1
+        ;;
+    esac
+    echo "ping: ok"
+
+    SNAPSHOT_RESULT=$(exec_command "snapshot")
+    if [ -z "$SNAPSHOT_RESULT" ]; then
+        echo "Snapshot failed: no response" >&2
+        exit 1
+    fi
+    SNAPSHOT_COUNT=$(echo "$SNAPSHOT_RESULT" | python3 -c "import json,sys; print(len(json.load(sys.stdin).get('composables',{})))" 2>/dev/null)
+    if [ -z "$SNAPSHOT_COUNT" ]; then
+        echo "Snapshot failed: invalid JSON" >&2
+        exit 1
+    fi
+    echo "snapshot: ok ($SNAPSHOT_COUNT composables)"
+
+    SUMMARY_RESULT=$(exec_command "summary")
+    if [ -z "$SUMMARY_RESULT" ]; then
+        echo "Summary failed: no response" >&2
+        exit 1
+    fi
+    SUMMARY_TOP=$(echo "$SUMMARY_RESULT" | python3 -c "import json,sys; print(len(json.load(sys.stdin).get('topByRate',[])))" 2>/dev/null)
+    if [ -z "$SUMMARY_TOP" ]; then
+        echo "Summary failed: invalid JSON" >&2
+        exit 1
+    fi
+    echo "summary: ok ($SUMMARY_TOP top entries)"
+    echo "Result: PASS"
+}
+
+do_doctor() {
+    local OK=0
+
+    echo "Rebound doctor"
+    echo "Port: $PORT"
+    echo
+
+    echo "Tools:"
+    if command -v nc >/dev/null 2>&1; then
+        echo "  nc: ok ($(command -v nc))"
+    else
+        echo "  nc: missing"
+        OK=1
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        echo "  python3: ok ($(command -v python3))"
+    else
+        echo "  python3: missing"
+        OK=1
+    fi
+    if command -v adb >/dev/null 2>&1; then
+        echo "  adb: ok ($(command -v adb))"
+    else
+        echo "  adb: missing"
+    fi
+    echo
+
+    echo "Direct TCP:"
+    DIRECT_RESULT=$(send_command "ping")
+    if [ "$DIRECT_RESULT" = "pong" ]; then
+        echo "  localhost:$PORT: ok (pong)"
+        echo
+        echo "Result: PASS - Rebound is reachable over direct TCP."
+        exit 0
+    fi
+    echo "  localhost:$PORT: no pong"
+    echo
+
+    echo "Android / ADB:"
+    if ! command -v adb >/dev/null 2>&1; then
+        echo "  skipped: adb is not installed"
+        echo
+        echo "Result: FAIL - install adb or use an iOS simulator/relay connection."
+        exit 1
+    fi
+
+    ADB_ROWS=""
+    for _ in 1 2 3; do
+        ADB_ROWS=$(adb devices 2>/dev/null | awk 'NR > 1 && NF >= 2 { print $1 " " $2 }')
+        [ -n "$ADB_ROWS" ] && break
+        sleep 0.5
+    done
+    DEVICES=$(echo "$ADB_ROWS" | awk '$2 == "device" { print $1 }')
+    DEVICE_COUNT=$(echo "$DEVICES" | sed '/^$/d' | wc -l | tr -d ' ')
+    if [ "$DEVICE_COUNT" = "0" ]; then
+        if [ -z "$ADB_ROWS" ]; then
+            echo "  devices: none"
+        else
+            echo "  devices: none ready"
+            echo "$ADB_ROWS" | sed 's/^/    /'
+        fi
+        echo
+        echo "Result: FAIL - connect/authorize an Android device, or launch an iOS simulator build."
+        exit 1
+    fi
+    if [ "$DEVICE_COUNT" != "1" ]; then
+        echo "  devices: $DEVICE_COUNT connected"
+        echo "$DEVICES" | sed 's/^/    /'
+        echo
+        echo "Result: FAIL - select one device with ANDROID_SERIAL, then rerun doctor."
+        exit 1
+    fi
+    echo "  device: $(echo "$DEVICES" | head -1)"
+
+    SOCKETS=$(adb shell "cat /proc/net/unix 2>/dev/null" 2>/dev/null | grep -oE '@rebound(_[0-9]+)?' | sed 's/@//' | sort -u)
+    if [ -z "$SOCKETS" ]; then
+        echo "  rebound socket: missing"
+        echo "  adb forwards:"
+        FORWARDS=$(adb forward --list 2>/dev/null | grep "tcp:$PORT")
+        if [ -z "$FORWARDS" ]; then
+            echo "    none for tcp:$PORT"
+        else
+            echo "$FORWARDS" | sed 's/^/    /'
+        fi
+        echo
+        echo "Result: FAIL - the app is running, but no Rebound runtime socket exists."
+        echo "Next:"
+        echo "  1. Launch a debug build with the Rebound Gradle plugin applied."
+        echo "  2. If rebound { debugOnly.set(true) }, release/pre-prod builds will not expose Rebound."
+        echo "  3. Interact with the Compose UI once, then rerun: ./rebound-cli.sh doctor"
+        exit 1
+    fi
+
+    echo "  rebound sockets:"
+    echo "$SOCKETS" | sed 's/^/    /'
+
+    for SOCK in $SOCKETS; do
+        adb forward tcp:$PORT localabstract:$SOCK >/dev/null 2>&1
+        FORWARD_RESULT=$(send_command "ping")
+        if [ "$FORWARD_RESULT" = "pong" ]; then
+            echo "  forward: tcp:$PORT -> localabstract:$SOCK ok"
+            echo
+            echo "Result: PASS - Rebound is reachable over ADB."
+            exit 0
+        fi
+    done
+
+    echo "  forward: no socket returned pong"
+    echo
+    echo "Result: FAIL - Rebound sockets exist, but the CLI could not communicate with them."
+    echo "Next:"
+    echo "  1. Restart the app process and rerun: ./rebound-cli.sh doctor"
+    echo "  2. Remove stale forwards with: adb forward --remove tcp:$PORT"
+    echo "  3. Rerun: ./rebound-cli.sh check"
+    exit 1
+}
+
 # ── main ──
 
 # Commands that don't need a device connection
 if [ "$CMD" = "diff" ]; then
     do_diff "$2" "$3" "$4"
+    exit $?
+fi
+
+if [ "$CMD" = "doctor" ]; then
+    do_doctor
     exit $?
 fi
 
@@ -288,6 +451,8 @@ fi
 
 if [ "$CMD" = "save" ]; then
     do_save "$2"
+elif [ "$CMD" = "check" ]; then
+    do_check
 elif [ "$CMD" = "watch" ]; then
     while true; do
         clear

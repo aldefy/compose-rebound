@@ -18,7 +18,7 @@ It instruments every `@Composable` function, applies a budget based on what that
 
 - **CI guardrail** — fail builds when recomposition budgets regress
 - **IDE feedback** — inspect hot spots, timeline spikes, and stability issues without leaving Android Studio
-- **Fast local checks** — use the CLI to script snapshot, diff, and watch workflows
+- **Fast local checks** — use the CLI to run `check`, snapshot, diff, and watch workflows
 
 ## Features
 
@@ -31,7 +31,7 @@ It instruments every `@Composable` function, applies a budget based on what that
 - **`@ReboundBudget` annotation** — override the inferred budget class for any composable
 - **Baseline regression detection** — snapshot metrics before/after and compare for regressions
 - **IDE tool window** — 5-tab performance cockpit (Monitor, Hot Spots, Timeline, Stability, History) with editor integration (gutter icons, CodeVision inlays, status bar widget) and session persistence
-- **CLI** — `snapshot`, `summary`, `watch`, `ping` commands over ADB socket
+- **CLI** — `doctor`, `check`, `snapshot`, `summary`, `watch`, `ping` commands over ADB socket
 
 ## Quick Start
 
@@ -229,6 +229,8 @@ The CLI auto-detects the connection path: direct TCP (iOS simulator or relay), A
 ./rebound-cli.sh summary    # Top 10 composables by recomposition rate
 ./rebound-cli.sh watch      # Live updates every 1 second
 ./rebound-cli.sh ping       # Health check → "pong"
+./rebound-cli.sh check      # Ping + snapshot + summary sanity check
+./rebound-cli.sh doctor     # Diagnose tools, device, socket, and ADB forwarding
 ```
 
 Or query directly:

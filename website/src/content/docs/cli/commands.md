@@ -6,6 +6,34 @@ title: Commands
 
 All commands are run via the `rebound-cli.sh` script from the repository root.
 
+## doctor
+
+Diagnoses connection failures. It checks local tools, direct TCP, Android device state, Rebound socket discovery, and ADB forwarding.
+
+```bash
+./rebound-cli.sh doctor
+```
+
+Use this when `ping` or `check` says the app is not reachable. The output tells you whether the problem is missing `adb`/`nc`, no connected device, no `rebound` socket in the running app, or a socket that exists but does not respond.
+
+## check
+
+Runs a quick sanity pass: `ping`, `snapshot`, and `summary`. This is the fastest way to verify that the app, socket forward, and JSON output are all working together.
+
+```bash
+./rebound-cli.sh check
+```
+
+**Response:**
+
+```text
+Rebound quick check [adb]
+ping: ok
+snapshot: ok (45 composables)
+summary: ok (10 top entries)
+Result: PASS
+```
+
 ## ping
 
 Health check to verify the connection to the app's `ReboundServer`.
