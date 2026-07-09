@@ -71,7 +71,19 @@ Rebound auto-installs on first composition. Violations appear in logcat:
 W/Rebound: [VIOLATION] MyScreen — 8 recomp/s (budget: 3, class: SCREEN)
 ```
 
-Connect the IDE plugin or CLI for richer output.
+**4. Prove the runtime path**
+
+Run the CLI while the debug app is open:
+
+```bash
+./rebound-cli.sh doctor   # Diagnoses tools, device, socket, and ADB forwarding
+./rebound-cli.sh check    # Proves ping + snapshot + summary data is flowing
+./rebound-cli.sh summary  # Shareable top recomposition risks for PRs, agents, or CI
+```
+
+`doctor` tells you why setup is broken. `check` proves the app is reachable and emitting JSON metrics. `summary` is the compact output to paste into reviews or automation.
+
+Connect the IDE plugin for richer live output.
 
 ## Architecture
 
@@ -225,12 +237,12 @@ The plugin connects via `adb forward tcp:18462 localabstract:rebound`. Install f
 The CLI auto-detects the connection path: direct TCP (iOS simulator or relay), ADB forward (Android), or devicectl console (iOS physical without relay).
 
 ```bash
-./rebound-cli.sh snapshot   # Full JSON metrics for all tracked composables
+./rebound-cli.sh doctor     # Diagnose tools, device, socket, and ADB forwarding
+./rebound-cli.sh check      # Ping + snapshot + summary sanity check
 ./rebound-cli.sh summary    # Top 10 composables by recomposition rate
+./rebound-cli.sh snapshot   # Full JSON metrics for all tracked composables
 ./rebound-cli.sh watch      # Live updates every 1 second
 ./rebound-cli.sh ping       # Health check → "pong"
-./rebound-cli.sh check      # Ping + snapshot + summary sanity check
-./rebound-cli.sh doctor     # Diagnose tools, device, socket, and ADB forwarding
 ```
 
 Or query directly:

@@ -6,6 +6,18 @@ title: Commands
 
 All commands are run via the `rebound-cli.sh` script from the repository root.
 
+## Known-good validation path
+
+Run these three commands after launching a debug build:
+
+```bash
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+`doctor` tells you if setup is broken. `check` proves runtime data is flowing. `summary` is the compact output to paste into PRs, agents, or CI.
+
 ## doctor
 
 Diagnoses connection failures. It checks local tools, direct TCP, Android device state, Rebound socket discovery, and ADB forwarding.

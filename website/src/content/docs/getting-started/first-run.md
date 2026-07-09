@@ -82,30 +82,26 @@ Each composable shows its current recomposition rate, budget, skip percentage, a
 
 ## 5. Use the CLI (Alternative)
 
-If you prefer the terminal:
+If you prefer the terminal, use this as the known-good validation path:
 
 ```bash
-# Set up ADB forward
-adb forward tcp:18462 localabstract:rebound
-
-# One-pass sanity check
-./rebound-cli.sh check
-
-# Diagnose connection problems
+# Diagnose tools, device, socket, and ADB forwarding
 ./rebound-cli.sh doctor
 
-# Health check
-./rebound-cli.sh ping
+# Prove the app is reachable and JSON metrics are flowing
+./rebound-cli.sh check
 
-# Full metrics snapshot
-./rebound-cli.sh snapshot
-
-# Top 10 violators
+# Paste this into PRs, agents, or CI logs
 ./rebound-cli.sh summary
+
+# Full metrics snapshot for scripts
+./rebound-cli.sh snapshot
 
 # Live updates every 1 second
 ./rebound-cli.sh watch
 ```
+
+`doctor` is for setup failures. `check` proves the runtime path works end to end. `summary` is the human-sized output for reviews and automation.
 
 ## Troubleshooting
 
@@ -114,9 +110,10 @@ adb forward tcp:18462 localabstract:rebound
 - Confirm the plugin is applied: check for `Rebound: compiler plugin applied` in the build log.
 
 **ADB forward fails?**
+- Run `./rebound-cli.sh doctor` first. It checks the connected device, Rebound socket, and ADB forwarding.
 - Ensure the app is running. The socket is only available while the process is alive.
 - If multiple apps use Rebound, the server falls back to `rebound_<pid>`. The CLI auto-discovers these.
 
 **IDE plugin shows "Not connected"?**
-- Run `adb forward tcp:18462 localabstract:rebound` after the app starts.
+- Run `./rebound-cli.sh doctor` after the app starts.
 - Click **Start** in the Rebound tool window toolbar.

@@ -28,6 +28,16 @@ W/Rebound: [VIOLATION] HomeScreen — 8 recomp/s (budget: 3, class: SCREEN)
   -> forced: 0 | param-driven: 8 | interaction: IDLE
 ```
 
+Then prove the runtime path from the terminal:
+
+```bash
+./rebound-cli.sh doctor
+./rebound-cli.sh check
+./rebound-cli.sh summary
+```
+
+`doctor` tells you if local setup is broken. `check` proves the app is reachable and metrics are flowing. `summary` gives you the compact output to paste into PRs, agents, or CI.
+
 ## What Makes Rebound Different
 
 The Compose ecosystem has solid tooling for recomposition analysis. Each tool answers a specific question well:
@@ -50,6 +60,6 @@ Rebound answers the question none of them address: **"Given what this composable
 - **`$changed` bitmask decoding** -- surfaces which parameters caused each recomposition
 - **Interaction-aware scaling** -- budgets adjust during scroll, animation, and user input
 - **IDE plugin** -- live monitoring, hot spots, timeline heatmap, stability analysis, gutter icons
-- **CLI** -- `snapshot`, `summary`, `watch`, `ping` commands over ADB socket
+- **CLI** -- `doctor`, `check`, `snapshot`, `summary`, `watch`, `ping` commands over ADB socket
 - **KMP** -- Android, JVM, iOS (arm64, x64, simulator arm64), Wasm
 - **Debug-only by default** -- zero overhead in release builds
